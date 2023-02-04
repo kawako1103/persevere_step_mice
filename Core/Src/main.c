@@ -33,8 +33,11 @@
 #include "PL_lcd.h"
 #include "PL_sensor.h"
 #include "trapezoid_acc_model.h"
+#include "Motor_Run.h"
 #include "log.h"
 #include "wall_control.h"
+#include "explore_method.h"
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -134,9 +137,11 @@ int main(void)
 
    int cnt=0;
    int g_ADCBuffer=0;
-   int g_V_batt =0;
+   double g_V_batt =0;
 //   int trapezoid_flag;
    int i;
+//   float x_dec=0;//trapezoid関数化に伴い不要かな
+//   float target_dis=540;
 
 
    HAL_TIM_Base_Start_IT(&htim1);//motor
@@ -179,7 +184,7 @@ int main(void)
 //	  printf("M_PI=%f\n\r", PI);
 
 
-//	  //test timer
+////	  //test timer
 //	  HAL_GPIO_WritePin(INTERFACELED_GPIO_Port,INTERFACELED_Pin,GPIO_PIN_SET);
 //	  wait_ms(3000);
 //	  HAL_GPIO_WritePin(INTERFACELED_GPIO_Port,INTERFACELED_Pin,GPIO_PIN_RESET);
@@ -202,10 +207,10 @@ int main(void)
 //	 	 pl_lcd_pos(1, 0);
 //	 	 pl_lcd_puts(strBuffer);
 
-//		//sensor test
+////閾値とかはここでセンサー//sensor test
 //		 HAL_ADC_Start_DMA(&hadc1, g_ADCBuffer,sizeof(g_ADCBuffer) / sizeof(uint16_t));
-//		 printf("BATT=%f\n",g_V_batt);
-//		 printf("SEN1=%d,SEN2=%d,SEN3=%d,SEN4=%d\n", g_sensor[0][0],g_sensor[1][0],g_sensor[2][0],g_sensor[3][0]);
+//		 printf("BATT=%f\n\r",g_V_batt);
+//		 printf("SEN1=%d,SEN2=%d,SEN3=%d,SEN4=%d\n\r", g_sensor[0][0],g_sensor[1][0],g_sensor[2][0],g_sensor[3][0]);
 //		 wait_ms(500);
 
 		  //motor test
@@ -225,7 +230,7 @@ int main(void)
 //		 	 	HAL_Delay(1000);
 //		 	  }
 		  //<台形>加速の概要
-//		 	  if (HAL_GPIO_ReadPin(SWITCH_1_GPIO_Port,SWITCH_1_Pin)==0){
+		 //台形加速関数化 試行
 //		 		   acc=1000;//加速度の定義
 //				   v_start=100;//初速定義
 //				   v_max=500;//最高速度定義
@@ -233,6 +238,38 @@ int main(void)
 //				   x=540;//目標
 //				   dt=0.001;//刻み時間
 //				   dis=0;
+//				   vel =100;
+//		 if (HAL_GPIO_ReadPin(SWITCH_1_GPIO_Port,SWITCH_1_Pin)==0){
+//		 trapezoid_accel_forward(2000,100,500,100,90);//90む台形加速(壁制御あり)の関数
+////
+////	     //2周テスト用
+////		 trapezoid_accel_lturn(1000,100,400,80,90);//左90°曲がる
+////////		 trapezoid_accel_lturn(1000,100,400,80,90);//90°曲がる
+////////         trapezoid_accel_lturn(1000,100,400,80,90);//90°曲がる
+////////         trapezoid_accel_rturn(1000,100,400,80,90);//90°曲がる
+////////         trapezoid_accel_rturn(1000,100,400,80,90);//90°曲がる
+////////		 trapezoid_accel_rturn(1000,100,400,80,90);//90°曲がる
+////////		 trapezoid_accel_rturn(1000,100,400,80,90);//90°曲がる
+////////		 trapezoid_accel_rturn(1000,100,400,80,90);//90°曲がる
+//////
+////		 trapezoid_accel_rturn(1350,100,400,80,90);//右90°曲がる//曲がりすぎるのでちょっと加速度を大きく
+//		 }
+
+         //	           angle_acc=1000;//角加速度の定義//ここの調整がなかなか　回転はすぐしたいから傾き大きめで良さげ//三角角加速の方がいいかも
+		 //			   angle_v_start=100;//初角速度定義
+		 //			   angle_v_max=400;//最高角速度定義//(400^2-100^2)/(2*2000)=500*300/(2*2000)=15*10^4/4000=37.5°で加角速
+		 //			   angle_v_end=80;//終端角速度定義 //(400^2-80^2)/(2*2000)=480*320/(2*2000)=120*2^5/1000=2^7*30/1000=3.840°で減角速
+		 //			   target_angle=180;//目標 180°
+
+//		// <台形>加速の概要 型とか初期化とかミスらなければちゃんと動く
+//		 	  if (HAL_GPIO_ReadPin(SWITCH_1_GPIO_Port,SWITCH_1_Pin)==0){
+//		 		   acc=1000;//加速度の定義
+//				   v_start=100;//初速定義
+//				   v_max=500;//最高速度定義
+//				   v_end=100;//終端速度定義
+//				   target_dis=270;//目標
+//				   dt=0.001;//刻み時間
+//				   dis=0;//変数として
 //				   vel =100;
 //				HAL_GPIO_WritePin(INTERFACELED_GPIO_Port,INTERFACELED_Pin,GPIO_PIN_SET);
 //				HAL_GPIO_WritePin(MOTOR_ENABLE_GPIO_Port,MOTOR_ENABLE_Pin,GPIO_PIN_SET);
@@ -246,7 +283,7 @@ int main(void)
 //				while(vel < v_max){
 //				}
 //				acc=0;
-//				while(x-dis>x_dec){
+//				while(target_dis-dis>x_dec){
 //					printf("%f\n\r",vel);
 //				}
 //				acc=-1000;
@@ -312,7 +349,7 @@ int main(void)
 //			   v_end=100;//終端速度定義
 //			   x=540;//目標
 //			   dt=0.001;//刻み時間
-//			   dis=0;
+//			   dis=10;
 //			   vel =100;
 //				HAL_GPIO_WritePin(INTERFACELED_GPIO_Port,INTERFACELED_Pin,GPIO_PIN_SET);
 //				HAL_GPIO_WritePin(MOTOR_ENABLE_GPIO_Port,MOTOR_ENABLE_Pin,GPIO_PIN_SET);
@@ -322,7 +359,7 @@ int main(void)
 //				HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
 //				HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_2);
 //				log_vel_flg=1;
-//				//以下台形加速
+//				//以下三角加速
 //				trapezoid_flg=1;
 //				x_dec = (v_max*v_max-v_end*v_end)/(2*acc);
 //				while(vel < v_max){
@@ -354,52 +391,174 @@ int main(void)
 //				}
 //			 }
 
-	  //<台形>超信地旋回の概要
-		 	  if (HAL_GPIO_ReadPin(SWITCH_1_GPIO_Port,SWITCH_1_Pin)==0){
-		 		   acc=1000;//加速度の定義
-				   v_start=100;//初速定義
-				   v_max=500;//最高速度定義
-				   v_end=100;//終端速度定義
-				   x=540;//目標
-				   dt=0.001;//刻み時間
-				   dis=0;
-				   vel =100;
-				HAL_GPIO_WritePin(INTERFACELED_GPIO_Port,INTERFACELED_Pin,GPIO_PIN_SET);
-				HAL_GPIO_WritePin(MOTOR_ENABLE_GPIO_Port,MOTOR_ENABLE_Pin,GPIO_PIN_SET);
-				HAL_GPIO_WritePin(MD_RESET_GPIO_Port,MD_RESET_Pin,GPIO_PIN_SET);
-				HAL_Delay(3);
-				HAL_GPIO_WritePin(MD_RESET_GPIO_Port,MD_RESET_Pin,GPIO_PIN_RESET);
-				HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
-				HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_2);
-				trapezoid_angle_flg=1;
-				x_dec = (v_max*v_max-v_end*v_end)/(2*acc);
-				while(vel < v_max){
-				}
-				acc=0;
-				while(x-dis>x_dec){
-					printf("%f\n\r",vel);
-				}
-				acc=-1000;
-				while(vel>v_end){
-					printf("%f\n\r",vel);
-				}
-				acc=0;
-				trapezoid_angle_flg=0;
-//				HAL_Delay(1000);
-				HAL_TIM_PWM_Stop(&htim1, TIM_CHANNEL_1);
-				HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_2);
-				HAL_Delay(500);
-				HAL_GPIO_WritePin(MOTOR_ENABLE_GPIO_Port,MOTOR_ENABLE_Pin,GPIO_PIN_RESET);
-		 	 }
+//	  //<超信地旋回>の概要//これは安定してうまくいく
+//		 	  if (HAL_GPIO_ReadPin(SWITCH_1_GPIO_Port,SWITCH_1_Pin)==0){
+//		 	   //一応初期化
+//		 	   acc=0;//加速度の定義
+//			   v_start=0;//初速定義
+//			   v_max=0;//最高速度定義
+//			   v_end=0;//終端速度定義
+//			   target_dis=0;//目標
+//			   dis=0;
+//			   vel =0;
+//			   //以下角速度系初期化
+//		 	   angle_acc=1000;//角加速度の定義//ここの調整がなかなか　回転はすぐしたいから傾き大きめで良さげ//三角角加速の方がいいかも
+//			   angle_v_start=100;//初角速度定義
+//			   angle_v_max=400;//最高角速度定義//(400^2-100^2)/(2*2000)=500*300/(2*2000)=15*10^4/4000=37.5°で加角速
+//			   angle_v_end=80;//終端角速度定義 //(400^2-80^2)/(2*2000)=480*320/(2*2000)=120*2^5/1000=2^7*30/1000=3.840°で減角速
+//			   target_angle=180;//目標 180°
+//			   dt=0.001;//刻み時間
+//			   angle=0;//変数としての角度
+//			   angle_vel =10;//変数としての角速度
+//
+//			   //wall_control_flg=1;//壁制御 超信地旋回の時は一旦壁制御切っても良いのでは
+//
+//				HAL_GPIO_WritePin(INTERFACELED_GPIO_Port,INTERFACELED_Pin,GPIO_PIN_SET);
+//				HAL_GPIO_WritePin(MOTOR_ENABLE_GPIO_Port,MOTOR_ENABLE_Pin,GPIO_PIN_SET);
+//				HAL_GPIO_WritePin(MD_RESET_GPIO_Port,MD_RESET_Pin,GPIO_PIN_SET);
+//				HAL_Delay(3);
+//				HAL_GPIO_WritePin(MD_RESET_GPIO_Port,MD_RESET_Pin,GPIO_PIN_RESET);
+//				HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
+//				HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_2);
+//
+//				trapezoid_angle_flg=1;
+//				angle_dec = (angle_v_max*angle_v_max-angle_v_end*angle_v_end)/(2*angle_acc);
+//				while(angle_vel < angle_v_max){
+//					//printf("%f\n\r",angle);
+//				}
+//				angle_acc=0;
+//				while(target_angle-angle > angle_dec){
+//					//printf("%f\n\r",angle);
+//				}
+//				angle_acc=-2000;
+//				while(angle_vel>angle_v_end){
+//					//printf("%f\n\r",angle);
+//				}
+//				angle_acc=0;
+//				trapezoid_angle_flg=0;
+////				HAL_Delay(1000);
+//				HAL_TIM_PWM_Stop(&htim1, TIM_CHANNEL_1);
+//				HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_2);
+//				HAL_Delay(500);
+//				HAL_GPIO_WritePin(MOTOR_ENABLE_GPIO_Port,MOTOR_ENABLE_Pin,GPIO_PIN_RESET);
+//				wait_ms(500);
+//				//壁制御用のflgをオフ(0)にする
+//				//wall_control_flg=0;
+//
+//				//2回目
+//				//一応初期化
+//						 	   acc=0;//加速度の定義
+//							   v_start=0;//初速定義
+//							   v_max=0;//最高速度定義
+//							   v_end=0;//終端速度定義
+//							   target_dis=0;//目標
+//							   dis=0;
+//							   vel =0;
+//							   //以下角速度系初期化
+//						 	   angle_acc=1000;//角加速度の定義//ここの調整がなかなか　回転はすぐしたいから傾き大きめで良さげ//三角角加速の方がいいかも
+//							   angle_v_start=100;//初角速度定義
+//							   angle_v_max=400;//最高角速度定義//(400^2-100^2)/(2*2000)=500*300/(2*2000)=15*10^4/4000=37.5°で加角速
+//							   angle_v_end=80;//終端角速度定義 //(400^2-80^2)/(2*2000)=480*320/(2*2000)=120*2^5/1000=2^7*30/1000=3.840°で減角速
+//							   target_angle=180;//目標 180°
+//							   dt=0.001;//刻み時間
+//							   angle=0;//変数としての角度
+//							   angle_vel =10;//変数としての角速度
+//
+//							   //wall_control_flg=1;//壁制御 超信地旋回の時は一旦壁制御切っても良いのでは
+//
+//								HAL_GPIO_WritePin(INTERFACELED_GPIO_Port,INTERFACELED_Pin,GPIO_PIN_SET);
+//								HAL_GPIO_WritePin(MOTOR_ENABLE_GPIO_Port,MOTOR_ENABLE_Pin,GPIO_PIN_SET);
+//								HAL_GPIO_WritePin(MD_RESET_GPIO_Port,MD_RESET_Pin,GPIO_PIN_SET);
+//								HAL_Delay(3);
+//								HAL_GPIO_WritePin(MD_RESET_GPIO_Port,MD_RESET_Pin,GPIO_PIN_RESET);
+//								HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
+//								HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_2);
+//
+//								trapezoid_angle_flg=1;
+//								angle_dec = (angle_v_max*angle_v_max-angle_v_end*angle_v_end)/(2*angle_acc);
+//								while(angle_vel < angle_v_max){
+//									//printf("%f\n\r",angle);
+//								}
+//								angle_acc=0;
+//								while(target_angle-angle > angle_dec){
+//									//printf("%f\n\r",angle);
+//								}
+//								angle_acc=-2000;
+//								while(angle_vel>angle_v_end){
+//									//printf("%f\n\r",angle);
+//								}
+//								angle_acc=0;
+//								trapezoid_angle_flg=0;
+//				//				HAL_Delay(1000);
+//								HAL_TIM_PWM_Stop(&htim1, TIM_CHANNEL_1);
+//								HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_2);
+//								HAL_Delay(500);
+//								HAL_GPIO_WritePin(MOTOR_ENABLE_GPIO_Port,MOTOR_ENABLE_Pin,GPIO_PIN_RESET);
+//
+//								//壁制御用のflgをオフ(0)にする
+//								//wall_control_flg=0;
+//
+//		 	    }
 
-////センサー取得
+//三角加速による超信地旋回
+// 	  //<超信地旋回>の概要
+//			  if (HAL_GPIO_ReadPin(SWITCH_1_GPIO_Port,SWITCH_1_Pin)==0){
+//			   angle_acc=2000;//角加速度の定義//ここの調整がなかなか　回転はすぐしたいから傾き大きめで良さげ//三角角加速の方がいいかも
+//			   angle_v_start=100;//初角速度定義
+//			   angle_v_max=400;//最高角速度定義//(400^2-100^2)/(2*2000)=500*300/(2*2000)=15*10^4/4000=37.5°で加角速
+//			   angle_v_end=80;//終端角速度定義 //(400^2-80^2)/(2*2000)=480*320/(2*2000)=120*2^5/1000=2^7*30/1000=3.840°で減角速
+//			   target_angle=180;//目標 180°
+//			   dt=0.001;//刻み時間
+//			   angle=0;//変数としての角度
+//			   angle_vel =10;//変数としての角速度
+//
+//			   wall_control_flg=1;//壁制御 超信地旋回の時は一旦壁制御切っても良いのでは
+//
+//				HAL_GPIO_WritePin(INTERFACELED_GPIO_Port,INTERFACELED_Pin,GPIO_PIN_SET);
+//				HAL_GPIO_WritePin(MOTOR_ENABLE_GPIO_Port,MOTOR_ENABLE_Pin,GPIO_PIN_SET);
+//				HAL_GPIO_WritePin(MD_RESET_GPIO_Port,MD_RESET_Pin,GPIO_PIN_SET);
+//				HAL_Delay(3);
+//				HAL_GPIO_WritePin(MD_RESET_GPIO_Port,MD_RESET_Pin,GPIO_PIN_RESET);
+//				HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
+//				HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_2);
+//				trapezoid_angle_flg=1;
+//				angle_dec = (angle_v_max*angle_v_max-angle_v_end*angle_v_end)/(2*angle_acc);
+//				while(angle_vel < angle_v_max){
+//					printf("%f\n\r",angle_vel);
+//					while(target_angle-angle>angle_dec){
+//								//printf("%f\n\r",angle_vel);
+//														}
+//					angle_acc=-1000;
+//				}
+//				angle_acc=0;
+//				while(target_angle-angle > angle_dec){
+//					printf("%f\n\r",angle_vel);
+//				}
+//				angle_acc=-1000;
+//				while(angle_vel>angle_v_end){
+//					printf("%f\n\r",angle_vel);
+//				}
+//				angle_acc=0;
+//				trapezoid_angle_flg=0;
+// //				HAL_Delay(1000);
+//				HAL_TIM_PWM_Stop(&htim1, TIM_CHANNEL_1);
+//				HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_2);
+//				HAL_Delay(500);
+//				HAL_GPIO_WritePin(MOTOR_ENABLE_GPIO_Port,MOTOR_ENABLE_Pin,GPIO_PIN_RESET);
+//
+//				//壁制御用のflgをオフ(0)にする
+//				wall_control_flg=0;
+//			 }
+
+
+////センサー取得なにこれ
 //		  		 HAL_ADC_Start_DMA(&hadc1, g_ADCBuffer,sizeof(g_ADCBuffer) / sizeof(uint16_t));
 //		  		 printf("BATT=%f\n\r",g_V_batt);
 //		  		 printf("SEN1=%d,SEN2=%d,SEN3=%d,SEN4=%d\n\r", g_sensor[0][0],g_sensor[1][0],g_sensor[2][0],g_sensor[3][0]);
 //		  		 wait_ms(500);
 //		  		 HAL_Delay(1000);
 
-////壁制御の概要1(2,3も共通かな)
+//壁制御の概要1(2,3も共通かな)
 //				  if (HAL_GPIO_ReadPin(SWITCH_1_GPIO_Port,SWITCH_1_Pin)==0){
 //				   acc=1000;//加速度の定義
 //				   v_start=100;//初速定義
@@ -447,11 +606,451 @@ int main(void)
 ////					log_vel_flg=0;
 ////					for(i=0;i<=t;i++){
 ////						printf("%f\n\r",record[i]);
-//					//壁制御用のflgをオン(0)にする
+//					//壁制御用のflgをオフ(0)にする
 //					wall_control_flg=0;
 //
 //					}
 
+//<左手法>の概要/動作のみ
+//				  float THERESHOULD_L=260;//左壁判定の閾値（仮実測値からよろ）//壁がないとき69~71なので 70 少し大きめで100
+//				  float THERESHOULD_R=180;//右壁判定の閾値（仮実測値からよろ）//壁がないとき35~40なので38 少し大きめて70
+//				  float THERESHOULD_FL=140;//左壁判定の閾値（仮実測値からよろ）//ありで240/壁がないとき98なので 170少し小さめで140
+//				  float THERESHOULD_FR=220;//右壁判定の閾値（仮実測値からよろ）//ありで344/壁がないとき175 259.5少し小さめで220
+//				  if (HAL_GPIO_ReadPin(SWITCH_2_GPIO_Port,SWITCH_2_Pin)==0){
+//				  trapezoid_accel_forward(2000,100,500,100,90);//90む台形加速の関数
+//				  while(1){
+//				  if((float)g_sensor[1][0]<THERESHOULD_L){//[1][0]は、左壁, [2][0]は、右壁 //ここは左壁無し
+//				  //90 mm直進,90°左旋回,90 mm直進,停止
+//				  trapezoid_accel_forward(2000,100,500,100,90);//90む台形加速の関数
+//		 	 	  trapezoid_accel_lturn(2000,100,400,80,90);//左90°曲がる
+//		 	 	  trapezoid_accel_forward(2000,100,500,100,90);//90む台形加速の関数
+//				  }else if(g_sensor[0][0]<THERESHOULD_FL&&g_sensor[3][0]<THERESHOULD_FR){//前壁なし
+////					g_WallControlStatus=g_WallControlStatus&~(1<<0);//1bit目を０にする
+//				  //180 mm直進,停止
+//				  trapezoid_accel_forward(2000,100,500,100,180);//90む台形加速の関数
+//				  }else if((float)g_sensor[2][0]<THERESHOULD_R){//右壁がない
+////					g_WallControlStatus=g_WallControlStatus|(1<<1);//2bit目を1にする修正済
+//				  //90 mm直進,90°右旋回,90 mm直進,停止
+//				  trapezoid_accel_forward(2000,100,500,100,90);//90む台形加速の関数
+//				  trapezoid_accel_rturn(2000,100,400,80,90);//左90°曲がる
+//				  trapezoid_accel_forward(2000,100,500,100,90);//90む台形加速の関数
+//				  }else{
+////					g_WallControlStatus=g_WallControlStatus&~(1<<1);//2bit目を0にする
+//				  //90前進,180°左旋回,90前進,停止
+//				  trapezoid_accel_forward(2000,100,500,100,90);//90む台形加速の関数
+//				  trapezoid_accel_lturn(2000,100,400,80,180);//左90°曲がる
+//				  trapezoid_accel_forward(2000,100,500,100,90);//90む台形加速の関数
+//				  }
+//				  }
+//				  }
+
+  //<左手法>の概要/動作＋壁情報保存
+//				  float THERESHOULD_L=260;//左壁判定の閾値（仮実測値からよろ）//壁がないとき69~71なので 70 少し大きめで100
+//				  float THERESHOULD_R=180;//右壁判定の閾値（仮実測値からよろ）//壁がないとき35~40なので38 少し大きめて70
+//				  float THERESHOULD_FL=260;//左壁判定の閾値（仮実測値からよろ）//ありで240/壁がないとき98なので 170少し小さめで140
+//				  float THERESHOULD_FR=180;//右壁判定の閾値（仮実測値からよろ）//ありで344/壁がないとき175 259.5少し小さめで220
+//				  int column[16];
+//				  int row[16];
+//				  int x=0;
+//				  int y=0;
+//				  int z=0;//(方角,z)=(北,0),(東,1),(南,2),(西,3),(-1になったら3に変換,4になったら0に変換あ(後で入れる))
+
+
+//	  //閾値とかはここでセンサー//sensor test
+//	  		 //HAL_ADC_Start_DMA(&hadc1, g_ADCBuffer,sizeof(g_ADCBuffer) / sizeof(uint16_t));
+//	  		 printf("BATT=%f\n\r",g_V_batt);
+//	  		 printf("SEN1=%d,SEN2=%d,SEN3=%d,SEN4=%d\n\r", g_sensor[0][0],g_sensor[1][0],g_sensor[2][0],g_sensor[3][0]);
+//	  		 wait_ms(500);
+
+
+//左手法/足立法のスイッチ
+				  if (HAL_GPIO_ReadPin(SWITCH_2_GPIO_Port,SWITCH_2_Pin)==0){
+					  HAL_Delay(500);//0.5秒経ってからスタート
+//					  left_hand_method_and_Print_Wall();
+//					  left_hand_method();
+//					  left_hand_method_2();//左手法　足立法と一緒に絶対使うな
+//					  adachi_method();//足立法
+					  //continual_adachi_method();//連続足立法
+					  slalom_continual_adachi_method();//スラローム付き連続足立法
+//					  motor_excitation_on();
+//					  motor_pwm_on();
+//					  trapezoid_accel_forward(2000,100,500,100,90);//70む台形加速の関数 連続足立法ね
+//					  motor_pwm_off();
+//					  HAL_Delay(1000);//1秒経ってから励磁解除
+//					  motor_excitation_off();
+//					  step_number();//歩数マップ展開かな
+				  }
+				  if (HAL_GPIO_ReadPin(SWITCH_1_GPIO_Port,SWITCH_1_Pin)==0){
+//					  Print_Wall();//ボタンを押したら出力
+					  Print_Wall_2();
+					  HAL_Delay(500);//0.5秒経ってからスタート
+
+
+					  ////
+					  ////2700mm(15マス分の連続走行(20mm + 160mmを繰り返すver.)のテスト用)
+					  ////
+//					  motor_excitation_on();
+//					  motor_pwm_on();
+////
+////
+//					  step_ver_trapezoid_accel_forward(2000,100,500,500,20);
+//					  trapezoid_accel_forward(2000,500,500,500,160);//70む台形加速の関数 連続足立法ね
+//					  for(i=0;i<=3;i+=1){
+//						  step_ver_trapezoid_accel_forward(2000,500,500,500,20);
+//						  trapezoid_accel_forward(2000,500,500,500,160);//70む台形加速の関数 連続足立法ね
+//					  }
+//					  step_ver_trapezoid_accel_forward(2000,500,500,500,20);
+//					  trapezoid_accel_forward(2000,500,500,100,160);//70む台形加速の関数 連続足立法ね
+//					  motor_pwm_off();
+//					  HAL_Delay(1000);//1秒経ってから励磁解除
+//					  motor_excitation_off();
+					  ////
+					  ////2700mm(15マス分の連続走行(20mm + 160mmを繰り返すver.)のテスト用)終わり
+					  ////
+
+					  ///スラローム
+					  motor_excitation_on();
+					  motor_pwm_on();
+					  trapezoid_accel_forward(2000,100,500,500,180);
+					  step_ver_trapezoid_accel_forward(2000,100,500,500,20);
+					  slalom_trapezoid_accel_rturn(350,15000,250,500,230,90);
+					  step_ver_trapezoid_accel_forward(2000,500,500,100,20);
+					  motor_pwm_off();
+					  //
+					  HAL_Delay(1000);//1秒経ってから励磁解除
+					  motor_excitation_off();
+
+					  ///スラローム終
+
+//					  		  motor_pwm_off();
+//					  		  motor_pwm_on();
+//					  		  trapezoid_accel_rturn(2000,100,400,80,90);//右90°曲がる
+//					  		  motor_pwm_off();
+//					  		  motor_pwm_on();
+//					  		  trapezoid_accel_forward(2000,100,500,500,90);//90む台形加速の関数
+//					  		trapezoid_accel_forward(2000,100,500,100,90);//90む台形加速の関数
+
+//					  slalom_trapezoid_accel_lturn(10000,100,460,80,90);//超信地旋回左から角加速度,初角速,最大角速度,終端角速度,設定角度
+//					  motor_excitation_on();
+//					  motor_pwm_on();
+//
+//
+//					  step_ver_trapezoid_accel_forward(2000,100,500,500,20);
+//					  trapezoid_accel_forward(2000,500,500,500,160);
+//
+//					  step_ver_trapezoid_accel_forward(2000,500,500,500,20);
+//					  trapezoid_accel_forward(2000,500,500,100,160);
+////
+//					  motor_pwm_off();
+////
+//					  HAL_Delay(1000);//1秒経ってから励磁解除
+//					  motor_excitation_off();
+				  }
+//				  if(HAL_GPIO_ReadPin(SWITCH_1_GPIO_Port,SWITCH_1_Pin)==0){
+////					  if(HAL_GPIO_ReadPin(SWITCH_1_GPIO_Port,SWITCH_1_Pin)==0){
+////						  trapezoid_accel_forward(2000,100,500,100,180);//90む台形加速の関数
+//
+////						  trapezoid_accel_rturn(2000,100,400,80,90);//左90°曲がる
+////						  trapezoid_accel_rturn(2000,100,400,80,90);//左90°曲がる
+////						  trapezoid_accel_rturn(2000,100,400,80,90);//左90°曲がる
+////						  trapezoid_accel_rturn(2000,100,400,80,90);//左90°曲がる
+////						  trapezoid_accel_backward(2000,100,300,100,80);//90back台形加速の関数遅くね
+////					  }
+//				  }
+
+//				  if(HAL_GPIO_ReadPin(SWITCH_1_GPIO_Port,SWITCH_1_Pin)==0){
+//					  wall_information_initialize();
+//					  step_number();//歩数マップ
+//
+//				  }
+//				  trapezoid_accel_forward(2000,100,500,100,90);//90む台形加速の関数
+//				  x=x;
+//				  y=y+1;
+//				  z=z;//　最初(0,0)にいた、(この時、(0,0.5)あたりにいるが一旦(0,0)にいたとみなす)北向き
+//				  //
+//				  //座標(いたマスの座標→センサーの捉える壁の座標)と方角更新→壁情報更新(if文で方角によって座標→センサーの手筈を決める)
+//				  //動作(動作直前の条件分布は何も見ないこと)によって座標だけ更新1マスしか進まない//動作によって方角と座標が1つ変わる(直進なら変わらないが)
+//				  while(1){
+//					  if(x==1&&y==1){
+//							trapezoid_accel_forward(2000,100,500,100,90);//90む台形加速の関数
+//							break;//無限ループから脱出
+//									}
+//				  if((float)g_sensor[1][0]<THERESHOULD_L){//[1][0]は、左壁, [2][0]は、右壁 //ここは左壁無し
+//				  //90 mm直進,90°左旋回,90 mm直進,停止
+//				  trapezoid_accel_forward(2000,100,500,100,90);//90む台形加速の関数
+//				  trapezoid_accel_lturn(2000,100,400,80,90);//左90°曲がる
+//				  trapezoid_accel_forward(2000,100,500,100,90);//90む台形加速の関数
+//				  //座標更新
+//				  if(z==0||z==4){//北に対して、、
+//					  x=x-1;
+//					  y=y;
+//					  if(z==4){
+//						  z=0;
+//					  }
+//				  }
+//				  if(z==1){//東に対して、、
+//					  x=x;
+//					  y=y+1;
+//				  }
+//				  if(z==2){//南に対して、、
+//					  x=x+1;
+//					  y=y;
+//				  }
+//				  if(z==3){//西に対して、、
+//					  x=x;
+//					  y=y-1;
+//					  if(z==-1){
+//						  z=3;
+//					  }
+//				  }
+//				  //向き更新
+//					  z=z-1;
+//				  }else if(g_sensor[0][0]<THERESHOULD_FL&&g_sensor[3][0]<THERESHOULD_FR){//前壁なし
+//				  //180 mm直進,停止
+//				  trapezoid_accel_forward(2000,100,500,100,180);
+//				  //座標更新
+//				  if(z==0||z==4){//北に対して、、
+//					  x=x;
+//					  y=y+1;
+//					  if(z==4){
+//						  z=0;
+//					  }
+//				  }
+//				  if(z==1){//東に対して、、
+//					  x=x+1;
+//					  y=y;
+//				  }
+//				  if(z==2){//南に対して、、
+//					  x=x;
+//					  y=y-1;
+//				  }
+//				  if(z==3){//西に対して、、
+//					  x=x-1;
+//					  y=y;
+//					  if(z==-1){
+//						  z=3;
+//					  }
+//				  }
+//				  //向き更新
+//					  z=z;
+//				  }else if((float)g_sensor[2][0]<THERESHOULD_R){//右壁がない
+//	//					g_WallControlStatus=g_WallControlStatus|(1<<1);//2bit目を1にする修正済
+//				  //90 mm直進,90°右旋回,90 mm直進,停止
+//				  trapezoid_accel_forward(2000,100,500,100,90);//90む台形加速の関数
+//				  trapezoid_accel_rturn(2000,100,400,80,90);//左90°曲がる
+//				  trapezoid_accel_forward(2000,100,500,100,90);//90む台形加速の関数
+//				  //座標更新
+//				  if(z==0||z==4){//北に対して、、
+//					  x=x+1;
+//					  y=y;
+//					  if(z==4){
+//						  z=0;
+//					  }
+//				  }
+//				  if(z==1){//東に対して、、
+//					  x=x;
+//					  y=y-1;
+//				  }
+//				  if(z==2){//南に対して、、
+//					  x=x-1;
+//					  y=y;
+//				  }
+//				  if(z==3){//西に対して、、
+//					  x=x;
+//					  y=y+1;
+//					  if(z==-1){
+//						  z=3;
+//					  }
+//				  }
+//				  //向き更新
+//					  z=z+1;
+//
+//				  }else{
+//	//					g_WallControlStatus=g_WallControlStatus&~(1<<1);//2bit目を0にする
+//				  //90前進,180°左旋回,90前進,停止
+//				  trapezoid_accel_forward(2000,100,500,100,90);//90む台形加速の関数
+//				  trapezoid_accel_lturn(2000,100,400,80,180);//左90°曲がる
+//				  trapezoid_accel_forward(2000,100,500,100,90);//90む台形加速の関数
+//				  //座標更新
+//				  if(z==0||z==4){//北に対して、、
+//					  x=x;
+//					  y=y-1;
+//					  if(z==4){
+//						  z=0;
+//					  }
+//				  }
+//				  if(z==1){//東に対して、、
+//					  x=x-1;
+//					  y=y;
+//				  }
+//				  if(z==2){//南に対して、、
+//					  x=x;
+//					  y=y+1;
+//				  }
+//				  if(z==3){//西に対して、、
+//					  x=x+1;
+//					  y=y;
+//					  if(z==-1){
+//						  z=3;
+//					  }
+//				  }
+//				  //向き更新
+//					  z=z-1;
+//				  }
+//
+//				  //方角によってどう変わるか//壁情報は今までいた座標によって決まる
+//				  if(z==0||z==4){//(x,y),北に対して、、
+//					  //左のセンサー
+//					  if((float)g_sensor[1][0]<THERESHOULD_L){//左なし
+//						  column[x-1]=column[x-1]&~(1<<y+1);//y+1ビット目を0にする
+//					  }else{//左あり
+//						  column[x-1]=column[x-1]|(1<<y+1);//y+1ビット目を1にする
+//					  }
+//					  //前のセンサー
+//					  if(g_sensor[0][0]<THERESHOULD_FL&&g_sensor[3][0]<THERESHOULD_FR){//前なし
+//						  row[y]=row[y]&~(1<<x+1);//x+1ビット目を0にする
+//					  }else{//前あり
+//						  row[y]=row[y]|(1<<x+1);//x+1を1にする
+//					  }
+//					  //右のセンサー
+//					  if((float)g_sensor[2][0]<THERESHOULD_R){//右がない
+//						  column[x]=column[x]&~(1<<y+1);//y+1ビット目を0にする
+//					  }else{//右あり
+//						  column[x]=column[x]|(1<<y+1);//y+1ビット目を1にする
+//					  }
+//
+//					  if(z==4){
+//						  z=0;
+//					  }
+//				  }else if(z==1){//(x,y),東に対して、、
+//					  //左のセンサー
+//					  if((float)g_sensor[1][0]<THERESHOULD_L){//左なし
+//						  row[y]=row[y]&~(1<<x+1);//x+1ビット目を0にする
+//					  }else{//左あり
+//						  row[y]=row[y]|(1<<x+1);//x+1を1にする
+//					  }
+//					  //前のセンサー
+//					  if(g_sensor[0][0]<THERESHOULD_FL&&g_sensor[3][0]<THERESHOULD_FR){//右なし
+//
+//						  column[x]=column[x]&~(1<<y+1);//y+1ビット目を0にする
+//					  }else{//右あり
+//						  column[x]=column[x]|(1<<y+1);//y+1ビット目を1にする
+//					  }
+//					  //右のセンサー
+//					  if((float)g_sensor[2][0]<THERESHOULD_R){//右がない
+//						  row[y-1]=row[y-1]&~(1<<x+1);//x+1ビット目を0にする
+//					  }else{//右あり
+//						  row[y-1]=row[y-1]|(1<<x+1);//x+1を1にする
+//					  }
+//
+//				  }else if(z==2){//(x,y),南に対して、、
+//					  //左のセンサー
+//					  if((float)g_sensor[1][0]<THERESHOULD_L){//左なし
+//						  column[x]=column[x]&~(1<<y+1);//y+1ビット目を0にする
+//					  }else{//左あり
+//						  column[x]=column[x]|(1<<y+1);//y+1ビット目を1にする
+//					  }
+//					  //前のセンサー
+//					  if(g_sensor[0][0]<THERESHOULD_FL&&g_sensor[3][0]<THERESHOULD_FR){//前なし
+//						  row[y-1]=row[y-1]&~(1<<x+1);//x+1ビット目を0にする
+//					  }else{//前あり
+//						  row[y-1]=row[y-1]|(1<<x+1);//x+1を1にする
+//					  }
+//					  //右のセンサー
+//					  if((float)g_sensor[2][0]<THERESHOULD_R){//右がない
+//						  column[x-1]=column[x-1]&~(1<<y+1);//y+1ビット目を0にする
+//					  }else{//右あり
+//						  column[x-1]=column[x-1]|(1<<y+1);//y+1ビット目を1にする
+//					  }
+//
+//				  }else if(z==3||z==-1){//(x,y),西に対して、、
+//					  //左のセンサー
+//					  if((float)g_sensor[1][0]<THERESHOULD_L){//左なし
+//						  row[y-1]=row[y-1]&~(1<<x+1);//x+1ビット目を0にする
+//					  }else{//左あり
+//						  row[y-1]=row[y-1]|(1<<x+1);//x+1を1にする
+//					  }
+//					  //前のセンサー
+//					  if(g_sensor[0][0]<THERESHOULD_FL&&g_sensor[3][0]<THERESHOULD_FR){//右なし
+//
+//						  column[x]=column[x]&~(1<<y+1);//y+1ビット目を0にする
+//					  }else{//右あり
+//						  column[x]=column[x]|(1<<y+1);//y+1ビット目を1にする
+//					  }
+//					  //右のセンサー
+//					  if((float)g_sensor[2][0]<THERESHOULD_R){//右がない
+//						  row[y]=row[y]&~(1<<x+1);//x+1ビット目を0にする
+//					  }else{//右あり
+//						  row[y]=row[y]|(1<<x+1);//x+1を1にする
+//					  }
+//					  if(z==-1){
+//						  z=3;
+//					  }
+//				  }
+//
+//				  }
+//				  }
+
+//				  //壁情報の打ち出し
+//				  void Print_Wall();
+//				  }
+//				  	int x,xx,y,i;
+//				  	printf("Print Start\n");
+//				  		for(y=15;y>=0;y--){
+//				  			for(x=0;x<16;x++){
+//				  				if((row[y]&(1<<x))==(1<<x)){
+//				  					printf("+---");
+//				  				}
+//				  				else if((row[y]&(0<<x))==(0<<x)){
+//				  					printf("+   ");
+//				  				}
+//				  			}
+//				  			printf("+");
+//				  			printf("\n");
+//				  			printf("|");
+//				  		for(xx=0;xx<16;xx++){
+//				  			if((column[xx]&(1<<y))==(1<<y)){
+//				  				printf("%3d|",Dist_Map[xx][y]);
+//				  				}
+//				  			else if((column[xx]&(0<<y))==(0<<y)){
+//				  				printf("%3d ",Dist_Map[xx][y]);
+//				  				}
+//				  		}
+//				  			printf("\n");
+//				  		}
+//				  	/*最後の行*/
+//				  	for(i=0;i<16;i++){
+//				  		printf("+---");
+//				  	}
+//				  	printf("+\n");
+//				  	printf("end\n\n");
+//				  }
+
+
+
+
+
+
+
+
+
+
+	     //2周テスト用
+//		 trapezoid_accel_lturn(1000,100,400,80,90);//左90°曲がる
+//
+//						//g_WallControlStatus=g_WallControlStatus|(1<<0);//1bit目を1にする修正済
+//
+//						}else if(g_sensor[0][0]>THERESHOULD_FL&&g_sensor[3][0]>THERESHOULD_FR){//前壁なし
+//							g_WallControlStatus=g_WallControlStatus&~(1<<0);//1bit目を０にする
+//
+//						}else if((float)g_sensor[2][0]>THERESHOULD_R){
+//							g_WallControlStatus=g_WallControlStatus|(1<<1);//2bit目を1にする修正済
+//
+//						}else{
+//							g_WallControlStatus=g_WallControlStatus&~(1<<1);//2bit目を0にする
+//
+//							}
+//  	  }
 
 
 
