@@ -707,14 +707,31 @@ int main(void)
 					  ////
 					  ////2700mm(15マス分の連続走行(20mm + 160mmを繰り返すver.)のテスト用)終わり
 					  ////
-
-					  ///スラローム
 					  motor_excitation_on();
 					  motor_pwm_on();
-					  trapezoid_accel_forward(2000,100,500,500,180);
-					  step_ver_trapezoid_accel_forward(2000,100,500,500,20);
-					  slalom_trapezoid_accel_rturn(350,15000,250,500,230,90);
-					  step_ver_trapezoid_accel_forward(2000,500,500,100,20);
+//					  HAL_Delay(500);//0.5秒経ってからスタート
+					  trapezoid_accel_backward(600,100,300,100,80);//90back台形加速の関数遅くね
+					  HAL_Delay(500);//
+					  motor_pwm_off();
+
+					  motor_pwm_on();
+					  trapezoid_accel_forward(2000,100,500,500,120);//120む台形加速の関数
+
+//					  ///スラローム調整用 1.5マス進んでslalomで右折 then 180進んで停止
+//					  ////
+//					  motor_excitation_on();
+//					  motor_pwm_on();
+//					  trapezoid_accel_forward(2000,100,500,500,180);
+//					  step_ver_trapezoid_accel_forward(2000,500,500,500,20);
+//					  slalom_trapezoid_accel_rturn(500,10000,100,460,80,91);//(500,10000,100,460,80,90); (500,17000,100,460,80,90);  (500,20000,100,460,80,90)
+//					  non_wall_control_trapezoid_accel_forward(2000,500,500,500,20);
+//					  step_ver_trapezoid_accel_forward(2000,500,500,500,20);
+//					  trapezoid_accel_forward(2000,500,500,100,160);
+					  /////
+					  //					  step_ver_trapezoid_accel_forward(2000,500,500,500,20);
+					  //					  slalom_trapezoid_accel_rturn(500,15000,250,460,230,90);
+					  //					  step_ver_trapezoid_accel_forward(2000,500,500,100,20);
+//					  trapezoid_accel_forward(2000,500,500,100,20);
 					  motor_pwm_off();
 					  //
 					  HAL_Delay(1000);//1秒経ってから励磁解除

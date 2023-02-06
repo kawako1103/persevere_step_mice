@@ -33,7 +33,7 @@ int hip_adjustment=0;
 
 //ゴール座標をここに入力
 int goal_x=4;
-int goal_y=0;
+int goal_y=5;
 int count;
 int MIN;
 
@@ -1239,10 +1239,13 @@ void slalom_continual_ver_action_based_on_direction_decision_and_coordinate_upda
 	      //180 mm直進終了
 	if(direction==1){//右向き
 		if(hip_adjustment==0){//条件に合わない時普通に
-
-			slalom_trapezoid_accel_rturn(350,15000,250,500,230,90);
-//			step_ver_trapezoid_accel_forward(2000,500,500,100,20);
-			trapezoid_accel_forward(2000,500,500,100,20);//90む台形加速の関数(2000,500,500,100,20);
+			slalom_trapezoid_accel_rturn(500,10000,100,460,80,91);//(500,10000,100,460,80,90); (500,17000,100,460,80,90);  (500,20000,100,460,80,90)
+			non_wall_control_trapezoid_accel_forward(2000,500,500,500,20);
+//			slalom_trapezoid_accel_rturn(500,17000,100,460,80,93);//(500,10000,100,460,80,90); (500,17000,100,460,80,90);  (500,20000,100,460,80,90)
+//			non_wall_control_trapezoid_accel_forward(2000,500,500,500,2);
+//			slalom_trapezoid_accel_rturn(350,15000,250,500,230,90);
+////			step_ver_trapezoid_accel_forward(2000,500,500,100,20);
+//			trapezoid_accel_forward(2000,500,500,100,20);//90む台形加速の関数(2000,500,500,100,20);
 //			slalom_trapezoid_accel_rturn(300,10000,100,460,80,90);
 //			trapezoid_accel_forward(2000,500,500,100,20);//90む台形加速の関数(2000,500,500,100,20);
 
@@ -1285,9 +1288,12 @@ void slalom_continual_ver_action_based_on_direction_decision_and_coordinate_upda
 		  //90 mm直進,90°左旋回,90 mm直進,停止
 
 		if(hip_adjustment==0){//条件に合わない時普通に
-
-			  slalom_trapezoid_accel_lturn(350,15000,250,500,230,90);
-			  trapezoid_accel_forward(2000,500,500,100,20);//90む台形加速の関数(2000,500,500,100,20);
+			  slalom_trapezoid_accel_lturn(500,10000,100,460,80,91);//(500,10000,100,460,80,90); (500,17000,100,460,80,90);  (500,20000,100,460,80,90)
+			  non_wall_control_trapezoid_accel_forward(2000,500,500,500,20);
+//			  slalom_trapezoid_accel_lturn(500,17000,100,460,80,93);//(500,10000,100,460,80,90); (500,17000,100,460,80,90);  (500,20000,100,460,80,90)
+//			  non_wall_control_trapezoid_accel_forward(2000,500,500,500,2);
+//			  slalom_trapezoid_accel_lturn(350,15000,250,500,230,90);
+//			  trapezoid_accel_forward(2000,500,500,100,20);//90む台形加速の関数(2000,500,500,100,20);
 //			  slalom_trapezoid_accel_lturn(300,10000,100,460,80,90);
 //			  trapezoid_accel_forward(2000,500,500,100,20);//90む台形加速の関数(2000,500,500,100,20);
 
@@ -3142,9 +3148,22 @@ void slalom_continual_adachi_method(void){
 
       wall_information_initialize();//壁情報の初期化
 	  //初期動作
-      motor_excitation_on();//励磁スタート
-      motor_pwm_on();
-	  trapezoid_accel_forward(2000,100,500,100,90);//90進む台形加速の関数
+      motor_excitation_on();
+	  motor_pwm_on();
+	  trapezoid_accel_backward(600,100,200,100,80);//90back台形加速の関数遅くね
+	  HAL_Delay(500);//
+	  motor_pwm_off();
+	  motor_pwm_on();
+	  trapezoid_accel_forward(2000,100,500,500,120);//120む台形加速の関数
+
+
+//      motor_excitation_on();//励磁スタート
+//      motor_pwm_on();
+//      trapezoid_accel_backward(1000,100,300,100,80);//90back台形加速の関数遅くね
+//	  motor_pwm_off();
+//	  motor_pwm_on();
+//      trapezoid_accel_forward(2000,100,500,500,120);//120む台形加速の関数
+//	  trapezoid_accel_forward(2000,100,500,500,90);//90進む台形加速の関数
 	  x=x;
 	  y=y+1;
 	  z=z;//　最初(0,1)から出発、(この時、(0,0.5)あたりにいるが一旦(0,1)にいたとみなす)北向き

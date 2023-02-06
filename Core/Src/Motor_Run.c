@@ -32,7 +32,7 @@ void motor_excitation_on(){//励磁ON タイヤを固める
 	HAL_GPIO_WritePin(MD_RESET_GPIO_Port,MD_RESET_Pin,GPIO_PIN_RESET);
 }
 
-void motor_excitation_off(){//励磁ON タイヤを緩める(これは動いている時にやると慣性で吹っ飛ぶので要注意)
+void motor_excitation_off(){//励磁OFF タイヤを緩める(これは動いている時にやると慣性で吹っ飛ぶので要注意)
 	HAL_GPIO_WritePin(MOTOR_ENABLE_GPIO_Port,MOTOR_ENABLE_Pin,GPIO_PIN_RESET);
 }
 
@@ -103,6 +103,58 @@ void trapezoid_accel_forward(float a0,float v0,float vM,float vE,float tx){//台
 
 		//壁制御用のflgをオフ(0)にする
 		wall_control_flg=0;
+	 }
+
+void non_wall_control_trapezoid_accel_forward(float a0,float v0,float vM,float vE,float tx){//台形加速左から加速度,初速,最大速度,終端速度,設定距離
+//	   acc=1000;//加速度の定義
+//	   v_start=100;//初速定義
+//	   v_max=500;//最高速度定義
+//	   v_end=100;//終端速度定義
+//	   x=540;//目標
+
+	   //初期化
+	   accm=a0;//externする用
+	   acc=a0;
+	   v_start=v0;
+	   v_max=vM;
+	   v_end=vE;
+	   target_dis=tx;
+	   dt=0.001;//刻み時間
+	   dis=0;
+	   left_dis=target_dis;
+	   vel =v_start;
+	   //壁制御オン(1)
+//	   wall_control_flg=1;
+
+
+		trapezoid_flg=1;
+//		motor_pwm_on();
+
+//		x_dec = (vel*vel-v_end*v_end)/(2*a);
+//		printf("%f\n\r",vel);
+		while((vel < v_max)&&(left_dis>x_dec)){
+//			printf("vel=%f,left_dis=%f,x_dec=%f,v_end=%f,accm=%f\n\r",vel,left_dis,x_dec,v_end,accm);
+
+		}
+		if(vel > v_max){
+			vel=vM;
+		}
+		acc=0;
+		while(left_dis>x_dec){//
+			//printf("%f\n\r",vel);
+//			printf("vel=%f,left_dis=%f,x_dec=%f,v_end=%f,accm=%f\n\r",vel,left_dis,x_dec,v_end,accm);
+		}
+		acc=-a0;
+		while(vel>v_end){
+			//printf("%f\n\r",vel);
+//			printf("vel=%f,left_dis=%f,x_dec=%f,v_end=%f,accm=%f\n\r",vel,left_dis,x_dec,v_end,accm);
+		}
+//		acc=0;
+		trapezoid_flg=0;
+//		motor_pwm_off();//これがあると止まってしまう
+
+		//壁制御用のflgをオフ(0)にする
+//		wall_control_flg=0;
 	 }
 
 
@@ -312,13 +364,13 @@ void trapezoid_accel_backward(float a0,float v0,float vM,float vE,float tx){//�
 	   vel =-v_start;
 	   //壁制御オン(1)
 	   	wall_control_flg=1;
-	    HAL_GPIO_WritePin(INTERFACELED_GPIO_Port,INTERFACELED_Pin,GPIO_PIN_SET);
-		HAL_GPIO_WritePin(MOTOR_ENABLE_GPIO_Port,MOTOR_ENABLE_Pin,GPIO_PIN_SET);
-		HAL_GPIO_WritePin(MD_RESET_GPIO_Port,MD_RESET_Pin,GPIO_PIN_SET);
-		HAL_Delay(3);
-		HAL_GPIO_WritePin(MD_RESET_GPIO_Port,MD_RESET_Pin,GPIO_PIN_RESET);
-		HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
-		HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_2);
+//	    HAL_GPIO_WritePin(INTERFACELED_GPIO_Port,INTERFACELED_Pin,GPIO_PIN_SET);
+//		HAL_GPIO_WritePin(MOTOR_ENABLE_GPIO_Port,MOTOR_ENABLE_Pin,GPIO_PIN_SET);
+//		HAL_GPIO_WritePin(MD_RESET_GPIO_Port,MD_RESET_Pin,GPIO_PIN_SET);
+//		HAL_Delay(3);
+//		HAL_GPIO_WritePin(MD_RESET_GPIO_Port,MD_RESET_Pin,GPIO_PIN_RESET);
+//		HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
+//		HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_2);
 		trapezoid_flg=1;
 //		x_dec = (v_max*v_max-v_end*v_end)/(2*acc);
 		while((fabs(vel) < fabs(v_max))&&(fabs(left_dis)>fabs(x_dec))){
@@ -337,11 +389,11 @@ void trapezoid_accel_backward(float a0,float v0,float vM,float vE,float tx){//�
 //		acc=0;
 		trapezoid_flg=0;
 	//				HAL_Delay(1000);
-		HAL_TIM_PWM_Stop(&htim1, TIM_CHANNEL_1);
-		HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_2);
-		HAL_Delay(300);
+//		HAL_TIM_PWM_Stop(&htim1, TIM_CHANNEL_1);
+//		HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_2);
+//		HAL_Delay(300);
 //		HAL_Delay(500);
-		HAL_GPIO_WritePin(MOTOR_ENABLE_GPIO_Port,MOTOR_ENABLE_Pin,GPIO_PIN_RESET);
+//		HAL_GPIO_WritePin(MOTOR_ENABLE_GPIO_Port,MOTOR_ENABLE_Pin,GPIO_PIN_RESET);
 		//壁制御用のflgをオフ(0)にする
 	    wall_control_flg=0;
 	 }
@@ -677,7 +729,7 @@ void slalom_trapezoid_accel_rturn(float center_of_gravity_vel,float angle_a,floa
        float v0=center_of_gravity_vel;
        float vM=center_of_gravity_vel;
        float vE=center_of_gravity_vel;
-       float tx=105;
+       float tx=70;
 	   //初期化スラロームver.
 	   accm=a0;//externする用
 	   acc=a0;//加速度の定義

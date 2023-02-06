@@ -17,6 +17,7 @@ void motor_pwm_off();
 //動作系 直進系、スラローム以外は励磁, PWM系のONOFF入っている
 void trapezoid_accel_forward(float,float,float,float,float);
 void step_ver_trapezoid_accel_forward(float,float,float,float,float);
+void non_wall_control_trapezoid_accel_forward(float a0,float v0,float vM,float vE,float tx);
 void trapezoid_accel_backward(float,float,float,float,float);
 void trapezoid_accel_lturn(float,float,float,float,float);
 void trapezoid_accel_rturn(float,float,float,float,float);
