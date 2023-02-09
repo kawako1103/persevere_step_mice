@@ -21,6 +21,8 @@
 //float THERESHOULD_FR=180;//右壁判定の閾値（仮実測値からよろ）//ありで344/壁がないとき175 259.5少し小さめで220
 int column[16];
 int row[16];
+int short_column[16];
+int short_row[16];
 int x=0;
 int y=0;
 int z=0;//(方角,z)=(北,0),(東,1),(南,2),(西,3),(-1になったら3に変換,4になったら0に変換あ(後で入れる))
@@ -98,11 +100,15 @@ void wall_information_initialize(void){
 	a=0;
 	column[a]=0b0000000000000001;
     row[a]=0b0000000000000000;
+    short_column[a]=0b0000000000000001;
+    short_row[a]=0b0000000000000000;
 
 	 for(a=1;a<=15;a++){
 	 column[a]=0b0000000000000000;
 	 row[a]=0b0000000000000000;//壁情報の初期化ね
-	 }
+	 short_column[a]=0b0000000000000000;
+	 short_row[a]=0b0000000000000000;
+     }
 
 }
 
@@ -875,6 +881,205 @@ void after_step_number_revised(){
 //			Print_Wall_2;
 
 }
+
+//最短走行用の歩数マップ作る関数
+
+///////
+//歩数マップ作成改善後
+void short_step_number_revised(void){//歩数マップ作成　初期化は外にしてみた//壁を埋めるというのを探索したかどうかも歩数を増やす条件に入れることでそうでないところは255のままになるようにしたが、、
+//別の関数によってMの座標は別の変数に補完されることとなりました。
+//	int s,k,l;
+////	STACK_T stack;
+//	//構造体の話をここで描いとくべきなんかな
+////	int p[16],q[16];
+////	int i=0;//ここでしか使わないつもり
+////	int value=0;//同上
+////	int v,w;//同上
+//		//一旦,x,y,zを別の変数に保管
+//		s=x;
+//		k=y;
+//		l=z;
+//    //足立法で255にしたところを一旦保存
+//	for(x=0;x<=15;x++){
+//			for(y=0;y<=15;y++){
+//				if(Dist_map[x][y]==255){
+//					p[i]=x;
+//					q[i]=y;
+//					value=i;
+//					i++;
+//				}
+//			}
+//		}//end
+
+//	//ゴールの隣にきた時に壁があっても認識できるようにする//before.に授ける
+//	if(Dist_map[goal_x][goal_y]==255){
+//		aroundgoal=1;//フラグみたいなもん
+//	}
+
+	//歩数マップの初期化これは足立法の繰り返しでは入れてはいけないきがす、、いや入れないとダメだ　毎回やらないと壁があるところなのに大きい値と判断しちゃう気がする
+	for(x=0;x<=15;x++){
+		for(y=0;y<=15;y++){
+			Dist_map[x][y]=255;
+		}
+	}//end
+
+//	Print_Wall_2();
+
+	//スタックの初期化
+	g_stack.head= 0;
+	g_stack.tail= 0;
+
+	//歩数マップの作成これは連続足立法のためのもの
+	Dist_map[goal_x][goal_y]=0;
+
+	pushStack_walk(&g_stack, goal_x);
+	pushStack_walk(&g_stack, goal_y);
+
+
+	for(count=0;count<=254;count++){
+
+		//スタックから座標をpopする
+		x=popStack_walk(&g_stack);//一旦、スタックが空ならbreakというのがこの関数に入っている信じて
+		y=popStack_walk(&g_stack);
+
+
+		if(x==65535||y==65535){
+					break;
+				}
+//		for(x=0;x<=15;x++){
+//				for(y=0;y<=15;y++){
+//		if(x>=0&&x<=15||y>=0&&y<=15){
+						if(x!=15){//探索済かどうかを判定することで、探索済出ないところは255のままになるようにする
+						if((x!=15)&&(Dist_map[x+1][y]==255)&&((column[x]&(1<<(y)))!=(1<<(y)))&&((short_column[x]&(1<<y))==(1<<y))){//xは東の方向に大きくなっていく x,yでの東//東壁がない//探索済
+							Dist_map[x+1][y]=Dist_map[x][y]+1;
+							//代入した座標をスタックにpushする
+								pushStack_walk(&g_stack, x+1);
+								pushStack_walk(&g_stack, y);
+						}
+						}
+
+						if(x!=0){
+						if((x!=0)&&(Dist_map[x-1][y]==255)&&((column[x-1]&(1<<(y)))!=(1<<(y)))&&((short_column[x-1]&(1<<y))==(1<<y))){//西壁がない//探索済
+							Dist_map[x-1][y]=Dist_map[x][y]+1;
+							//代入した座標をスタックにpushする
+								pushStack_walk(&g_stack, x-1);
+								pushStack_walk(&g_stack, y);
+
+						}
+						}
+
+						if(y!=15){
+						if((y!=15)&&(Dist_map[x][y+1]==255)&&((row[y]&(1<<(x)))!=(1<<(x)))&&((short_row[y]&(1<<(x)))==(1<<(x)))){//北壁がない//探索済
+							Dist_map[x][y+1]=Dist_map[x][y]+1;
+							//代入した座標をスタックにpushする
+								pushStack_walk(&g_stack, x);
+								pushStack_walk(&g_stack, y+1);
+
+						}
+						}
+
+						if(y!=0){
+						if((y!=0)&&(Dist_map[x][y-1]==255)&&((row[y-1]&(1<<(x)))!=(1<<(x)))&&((short_row[y-1]&(1<<(x)))==(1<<(x)))){//南壁がない//探索済
+							Dist_map[x][y-1]=Dist_map[x][y]+1;
+							//代入した座標をスタックにpushする
+								pushStack_walk(&g_stack, x);
+								pushStack_walk(&g_stack, y-1);
+
+						}
+						}
+//		}
+//					//代入した座標をスタックにpushする
+//					pushStack_walk(&stack, x);
+//				    pushStack_walk(&stack, y);
+//					//end
+//					}
+//				}
+			}
+
+//	if(aroundgoal==1){
+//		Dist_map[goal_x][goal_y]=255;
+//		aroundgoal=0;//役目終わったら0にする
+//	}else{
+//		Dist_map[goal_x][goal_y]=0;
+//	}
+////	 //足立法で255に保存したところを元に戻す
+////		for(i=0;i<=value;i++){
+////			v=p[i];
+////			w=q[i];
+////			Dist_map[v][w]==255;
+////			}//end
+//
+//	//x,y,zにこの関数の初めに入れといた数字を戻す
+//		x=s;
+//		y=k;
+//		z=l;
+//
+//		printf("Front_wall=%d,Right_wall=%d,Left_wall=%d\n\r",Front_wall,Right_wall,Left_wall);
+//		//255を入れる作業//入れたら次のときのために初期化せよ
+//		//北
+//		if(z==0){
+//			if(Front_wall==255){
+//				Dist_map[x][y+1]=Front_wall;
+////				Front_wall=0;//連続足立法の場合, while文中で5回繰り返されるので2回目以降に0になるのを防ぎたいこの関数全体を別の場所に移す
+//			}
+//			if(Right_wall==255){
+//				Dist_map[x+1][y]=Right_wall;
+//				Right_wall=0;
+//			}
+//			if(Left_wall==255){
+//				Dist_map[x-1][y]=Left_wall;
+//				Left_wall=0;
+//			}
+//		}
+//		//東
+//		else if(z==1){
+//			if(Front_wall==255){
+//				Dist_map[x+1][y]=Front_wall;
+//				Front_wall=0;
+//			}
+//			if(Right_wall==255){
+//				Dist_map[x][y-1]=Right_wall;
+//				Right_wall=0;
+//			}
+//			if(Left_wall==255){
+//				Dist_map[x][y+1]=Left_wall;
+//				Left_wall=0;
+//			}
+//
+//		//南
+//		}else if(z==2){
+//			if(Front_wall==255){
+//				Dist_map[x][y-1]=Front_wall;
+//				Front_wall=0;
+//			}
+//			if(Right_wall==255){
+//				Dist_map[x-1][y]=Right_wall;
+//				Right_wall=0;
+//			}
+//			if(Left_wall==255){
+//				Dist_map[x+1][y]=Left_wall;
+//				Left_wall=0;
+//			}
+//
+//		//西
+//		}else if(z==3){
+//			if(Front_wall==255){
+//				Dist_map[x-1][y]=Front_wall;
+//				Front_wall=0;
+//			}
+//			if(Right_wall==255){
+//				Dist_map[x][y+1]=Right_wall;
+//				Right_wall=0;
+//			}
+//			if(Left_wall==255){
+//				Dist_map[x][y-1]=Left_wall;
+//				Left_wall=0;
+//			}
+//		}
+//		Print_Wall_2;
+
+	}
+
 
 
 void action_based_on_direction_decision_and_coordinate_update(void){
@@ -2401,7 +2606,7 @@ void left_hand_method_2(void){
 }
 
 //関数化した一番外側にいるときの壁情報の処理, 加えて, 区画の境界にいるときに壁情報の取得諸々
-void wall_sensor(){
+void wall_sensor(){//最短走行用で探索済の壁を記録するっていうコードも入れる
 	 //①一番外側いる時//歩数マップ作成時に壁がない方と同じ歩数になりがちなので、外壁沿いで壁があったらその奥を255にする操作を入れてみる
 			if((x==0)){//①-1最左壁一列
 				//北側を見ている  左センサーを除く
@@ -2409,18 +2614,26 @@ void wall_sensor(){
 					  //前のセンサー
 					  if((g_sensor[0][0]<WALLREAD_FL)&&(g_sensor[3][0]<WALLREAD_FR)){//前なし
 						  row[y]=row[y]&~(1<<(x));//xビット目を0にする
+						  //最短走行用
+						  short_row[y]=short_row[y]|(1<<(x));//探索しました
 					  }else{//前あり
 						  row[y]=row[y]|(1<<(x));//xを1にする
 						  Dist_map[x][y+1]=255;//壁のある奥を255歩にする
 						  Front_wall=255;
+						  //最短走行用
+						  short_row[y]=short_row[y]|(1<<(x));//探索しました
 					  }
 					  //右のセンサー
 					  if((float)g_sensor[2][0]<WALLREAD_R){//右がない
 						  column[x]=column[x]&~(1<<(y));//yビット目を0にする
+						  //最短走行用
+						  short_column[x]=short_column[x]|(1<<(y));//探索しました
 					  }else{//右あり
 						  column[x]=column[x]|(1<<(y));//yビット目を1にする
 						  Dist_map[x+1][y]=255;//壁のある奥を255歩にする
 						  Right_wall=255;
+						  //最短走行用
+						  short_column[x]=short_column[x]|(1<<(y));//探索しました用
 					  }
 
 					  if(z==4){
@@ -2432,30 +2645,43 @@ void wall_sensor(){
 						//左のセンサー
 					  if((float)g_sensor[1][0]<WALLREAD_L){//左なし
 						  row[y]=row[y]&~(1<<(x));//xビット目を0にする
+						  //最短走行用
+						  short_row[y]=short_row[y]|(1<<(x));//探索しました
+
 					  }else{//左あり
 						  row[y]=row[y]|(1<<(x));//xを1にする
 						  Dist_map[x][y+1]=255;
 						  Left_wall=255;
+						  //最短走行用
+						  short_row[y]=short_row[y]|(1<<(x));//探索しました
 					  }
 					  //前のセンサー
 					  if((g_sensor[0][0]<WALLREAD_FL)&&(g_sensor[3][0]<WALLREAD_FR)){//右なし
 
 						  column[x]=column[x]&~(1<<(y));//yビット目を0にする
+						  //最短走行用
+						  short_column[x]=short_column[x]|(1<<(y));//探索しました用
 					  }else{//前あり
 						  column[x]=column[x]|(1<<(y));//yビット目を1にする
 						  Dist_map[x+1][y]=255;//壁のある奥を255歩にする
 						  Front_wall=255;
+						  //最短走行用
+						  short_column[x]=short_column[x]|(1<<(y));//探索しました用
 					  }
 					  //右のセンサー
 					  if((float)g_sensor[2][0]<WALLREAD_R){//右がない
 						  if(y>0){
 						  row[y-1]=row[y-1]&~(1<<(x));//xビット目を0にする
+						  //最短走行用
+						  short_row[y-1]=short_row[y-1]|(1<<(x));//探索しました
 						  }
 					  }else{//右あり
 						  if(y>0){
 						  row[y-1]=row[y-1]|(1<<(x));//xを1にする
 						  Dist_map[x][y-1]=255;
 						  Right_wall=255;
+						  //最短走行用
+						  short_row[y]=short_row[y]|(1<<(x));//探索しました
 						  }
 					  }
 					}
@@ -2464,21 +2690,29 @@ void wall_sensor(){
 					  //左のセンサー
 					  if((float)g_sensor[1][0]<WALLREAD_L){//左なし
 						  column[x]=column[x]&~(1<<(y));//yビット目を0にする
+						  //最短走行用
+						  short_column[x]=short_column[x]|(1<<(y));//探索しました用
 					  }else{//左あり
 						  column[x]=column[x]|(1<<(y));//yビット目を1にする
 						  Dist_map[x+1][y]=255;
 						  Left_wall=255;
+						  //最短走行用
+						  short_column[x]=short_column[x]|(1<<(y));//探索しました用
 					  }
 					  //前のセンサー
 					  if((g_sensor[0][0]<WALLREAD_FL)&&(g_sensor[3][0]<WALLREAD_FR)){//前なし
 						  if(y>0){
 						  row[y-1]=row[y-1]&~(1<<(x));//xビット目を0にする
+						  //最短走行用
+						  short_row[y-1]=short_row[y-1]|(1<<(x));//探索しました
 						  }
 					  }else{//前あり
 						  if(y>0){
 						  row[y-1]=row[y-1]|(1<<(x));//xを1にする
 						  Dist_map[x][y-1]=255;
 						  Front_wall=255;
+						  //最短走行用
+						  short_row[y-1]=short_row[y-1]|(1<<(x));//探索しました
 						  }
 					  }
 					}
@@ -2489,21 +2723,29 @@ void wall_sensor(){
 					  if((float)g_sensor[1][0]<WALLREAD_L){//左なし
 						  if(y>0){
 						  row[y-1]=row[y-1]&~(1<<(x));//xビット目を0にする
+						  //最短走行用
+						  short_row[y-1]=short_row[y-1]|(1<<(x));//探索しました
 						  }
 					  }else{//左あり
 						  if(y>0){
 						  row[y-1]=row[y-1]|(1<<(x));//xを1にする
 						  Dist_map[x][y-1]=255;
 						  Left_wall=255;
+						  //最短走行用
+						  short_row[y-1]=short_row[y-1]|(1<<(x));//探索しました
 						  }
 					  }
 					  //右のセンサー
 					  if((float)g_sensor[2][0]<WALLREAD_R){//右がない
 						  row[y]=row[y]&~(1<<(x));//xビット目を0にする
+						  //最短走行用
+						  short_row[y]=short_row[y]|(1<<(x));//探索しました
 					  }else{//右あり
 						  row[y]=row[y]|(1<<(x));//xを1にする
 						  Dist_map[x][y+1]=255;
 						  Right_wall=255;
+						  //最短走行用
+						  short_row[y]=short_row[y]|(1<<(x));//探索しました
 					  }
 					  if(z==-1){
 						  z=3;
@@ -2517,21 +2759,29 @@ void wall_sensor(){
 					  if((float)g_sensor[1][0]<WALLREAD_L){//左なし
 						  if(x>0){
 						  column[x-1]=column[x-1]&~(1<<(y));//yビット目を0にする//0bit目から数えることとする　要は1番目と呼んでいるのを0bit目として判断
+						  //最短走行用
+						  short_column[x-1]=short_column[x-1]|(1<<(y));//探索しました用
 						  }
 					  }else{//左あり
 						  if(x>0){
 						  column[x-1]=column[x-1]|(1<<(y));//yビット目を1にする
 						  Dist_map[x-1][y]=255;
 						  Left_wall=255;
+						  //最短走行用
+						  short_column[x-1]=short_column[x-1]|(1<<(y));//探索しました用
 						  }
 					  }
 					  //右のセンサー
 					  if((float)g_sensor[2][0]<WALLREAD_R){//右がない
 						  column[x]=column[x]&~(1<<(y));//yビット目を0にする
+						  //最短走行用
+						  short_column[x]=short_column[x]|(1<<(y));//探索しました用
 					  }else{//右あり
 						  column[x]=column[x]|(1<<(y));//yビット目を1にする
 						  Dist_map[x+1][y]=255;
 						  Right_wall=255;
+						  //最短走行用
+						  short_column[x]=short_column[x]|(1<<(y));//探索しました用
 					  }
 
 					  if(z==4){
@@ -2544,22 +2794,30 @@ void wall_sensor(){
 					  if((g_sensor[0][0]<WALLREAD_FL)&&(g_sensor[3][0]<WALLREAD_FR)){//右なし
 
 						  column[x]=column[x]&~(1<<(y));//yビット目を0にする
+						  //最短走行用
+						  short_column[x]=short_column[x]|(1<<(y));//探索しました用
 					  }else{//前あり
 						  column[x]=column[x]|(1<<(y));//yビット目を1にする
 						  Dist_map[x+1][y]=255;
 						  Front_wall=255;
+						  //最短走行用
+						  short_column[x]=short_column[x]|(1<<(y));//探索しました用
 
 					  }
 					  //右のセンサー
 					  if((float)g_sensor[2][0]<WALLREAD_R){//右がない
 						  if(y>0){
 						  row[y-1]=row[y-1]&~(1<<(x));//xビット目を0にする
+						  //最短走行用
+						  short_row[y-1]=short_row[y-1]|(1<<(x));//探索しました
 						  }
 					  }else{//右あり
 						  if(y>0){
 						  row[y-1]=row[y-1]|(1<<(x));//xを1にする
 						  Dist_map[x][y-1]=255;
 						  Right_wall=255;
+						  //最短走行用
+						  short_row[y-1]=short_row[y-1]|(1<<(x));//探索しました
 						  }
 					  }
 					}
@@ -2568,33 +2826,45 @@ void wall_sensor(){
 					  //左のセンサー
 					  if((float)g_sensor[1][0]<WALLREAD_L){//左なし
 						  column[x]=column[x]&~(1<<(y));//yビット目を0にする
+						  //最短走行用
+						  short_column[x]=short_column[x]|(1<<(y));//探索しました用
 					  }else{//左あり
 						  column[x]=column[x]|(1<<(y));//yビット目を1にする
 						  Dist_map[x+1][y]=255;
 						  Left_wall=255;
+						  //最短走行用
+						  short_column[x]=short_column[x]|(1<<(y));//探索しました用
 					  }
 					  //前のセンサー
 					  if((g_sensor[0][0]<WALLREAD_FL)&&(g_sensor[3][0]<WALLREAD_FR)){//前なし
 						  if(y>0){
 						  row[y-1]=row[y-1]&~(1<<(x));//xビット目を0にする
+						  //最短走行用
+						  short_row[y-1]=short_row[y-1]|(1<<(x));//探索しました
 						  }
 					  }else{//前あり
 						  if(y>0){
 						  row[y-1]=row[y-1]|(1<<(x));//xを1にする
 						  Dist_map[x][y-1]=255;
 						  Front_wall=255;
+						  //最短走行用
+						  short_row[y-1]=short_row[y-1]|(1<<(x));//探索しました
 						  }
 					  }
 					  //右のセンサー
 					  if((float)g_sensor[2][0]<WALLREAD_R){//右がない
 						  if(x>0){
 						  column[x-1]=column[x-1]&~(1<<(y));//yビット目を0にする
+						  //最短走行用
+						  short_column[x-1]=short_column[x-1]|(1<<(y));//探索しました用
 						  }
 					  }else{//右あり
 						  if(x>0){
 						  column[x-1]=column[x-1]|(1<<(y));//yビット目を1にする
 						  Dist_map[x-1][y]=255;
 						  Right_wall=255;
+						  //最短走行用
+						  short_column[x-1]=short_column[x-1]|(1<<(y));//探索しました用
 						  }
 					  }
 				  }
@@ -2605,21 +2875,29 @@ void wall_sensor(){
 					  if((float)g_sensor[1][0]<WALLREAD_L){//左なし
 						  if(y>0){
 						  row[y-1]=row[y-1]&~(1<<(x));//xビット目を0にする
+						  //最短走行用
+						  short_row[y-1]=short_row[y-1]|(1<<(x));//探索しました
 						  }
 					  }else{//左あり
 						  if(y>0){
 						  row[y-1]=row[y-1]|(1<<(x));//xを1にする
 						  Dist_map[x][y-1]=255;
 						  Left_wall=255;
+						  //最短走行用
+						  short_row[y-1]=short_row[y-1]|(1<<(x));//探索しました
 						  }
 					  }
 					  //前のセンサー
 					  if((g_sensor[0][0]<WALLREAD_FL)&&(g_sensor[3][0]<WALLREAD_FR)){//右なし
 						  column[x-1]=column[x-1]&~(1<<(y));//yビット目を0にする
+						  //最短走行用
+						  short_column[x-1]=short_column[x-1]|(1<<(y));//探索しました用
 					  }else{//前あり
 						  column[x-1]=column[x-1]|(1<<(y));//yビット目を1にする
 						  Dist_map[x-1][y]=255;
 						  Front_wall=255;
+						  //最短走行用
+						  short_column[x-1]=short_column[x-1]|(1<<(y));//探索しました用
 					  }
 					  if(z==-1){
 						  z=3;
@@ -2632,21 +2910,29 @@ void wall_sensor(){
 					  if((float)g_sensor[1][0]<WALLREAD_L){//左なし
 						  if(x>0){
 						  column[x-1]=column[x-1]&~(1<<(y));//yビット目を0にする//0bit目から数えることとする　要は1番目と呼んでいるのを0bit目として判断
+						  //最短走行用
+						  short_column[x-1]=short_column[x-1]|(1<<(y));//探索しました用
 						  }
 					  }else{//左あり
 						  if(x>0){
 						  column[x-1]=column[x-1]|(1<<(y));//yビット目を1にする
 						  Dist_map[x-1][y]=255;
 						  Left_wall=255;
+						  //最短走行用
+						  short_column[x-1]=short_column[x-1]|(1<<(y));//探索しました用
 						  }
 					  }
 					  //前のセンサー
 					  if((g_sensor[0][0]<WALLREAD_FL)&&(g_sensor[3][0]<WALLREAD_FR)){//前なし
 						  row[y]=row[y]&~(1<<(x));//xビット目を0にする
+						  //最短走行用
+						  short_row[y]=short_row[y]|(1<<(x));//探索しました
 					  }else{//前あり
 						  row[y]=row[y]|(1<<(x));//xを1にする
 						  Dist_map[x][y+1]=255;
 						  Front_wall=255;
+						  //最短走行用
+						  short_row[y]=short_row[y]|(1<<(x));//探索しました
 					  }
 					  if(z==4){
 						  z=0;
@@ -2658,21 +2944,29 @@ void wall_sensor(){
 					  //左のセンサー
 					  if((float)g_sensor[1][0]<WALLREAD_L){//左なし
 						  row[y]=row[y]&~(1<<(x));//xビット目を0にする
+						  //最短走行用
+						  short_row[y]=short_row[y]|(1<<(x));//探索しました
 					  }else{//左あり
 						  row[y]=row[y]|(1<<(x));//xを1にする
 						  Dist_map[x][y+1]=255;
 						  Left_wall=255;
+						  //最短走行用
+						  short_row[y]=short_row[y]|(1<<(x));//探索しました
 					  }
 					  //右のセンサー
 					  if((float)g_sensor[2][0]<WALLREAD_R){//右がない
 						  if(y>0){
 						  row[y-1]=row[y-1]&~(1<<(x));//xビット目を0にする
+						  //最短走行用
+						  short_row[y-1]=short_row[y-1]|(1<<(x));//探索しました
 						  }
 					  }else{//右あり
 						  if(y>0){
 						  row[y-1]=row[y-1]|(1<<(x));//xを1にする
 						  Dist_map[x][y-1]=255;
 						  Right_wall=255;
+						  //最短走行用
+						  short_row[y-1]=short_row[y-1]|(1<<(x));//探索しました
 						  }
 					  }
 				  }
@@ -2682,24 +2976,32 @@ void wall_sensor(){
 					  if((g_sensor[0][0]<WALLREAD_FL)&&(g_sensor[3][0]<WALLREAD_FR)){//前なし
 						  if(y>0){
 						  row[y-1]=row[y-1]&~(1<<(x));//xビット目を0にする
+						  //最短走行用
+						  short_row[y-1]=short_row[y-1]|(1<<(x));//探索しました
 						  }
 					  }else{//前あり
 						  if(y>0){
 						  row[y-1]=row[y-1]|(1<<(x));//xを1にする
 						  Dist_map[x][y-1]=255;
 						  Front_wall=255;
+						  //最短走行用
+						  short_row[y-1]=short_row[y-1]|(1<<(x));//探索しました
 						  }
 					  }
 					  //右のセンサー
 					  if((float)g_sensor[2][0]<WALLREAD_R){//右がない
 						  if(x>0){
 						  column[x-1]=column[x-1]&~(1<<(y));//yビット目を0にする
+						  //最短走行用
+						  short_column[x-1]=short_column[x-1]|(1<<(y));//探索しました用
 						  }
 					  }else{//右あり
 						  if(x>0){
 						  column[x-1]=column[x-1]|(1<<(y));//yビット目を1にする
 						  Dist_map[x-1][y]=255;
 						  Right_wall=255;
+						  //最短走行用
+						  short_column[x-1]=short_column[x-1]|(1<<(y));//探索しました用
 						  }
 					  }
 				  }
@@ -2710,29 +3012,41 @@ void wall_sensor(){
 					  if((float)g_sensor[1][0]<WALLREAD_L){//左なし
 						  if(y>0){
 						  row[y-1]=row[y-1]&~(1<<(x));//xビット目を0にする
+						  //最短走行用
+						  short_row[y-1]=short_row[y-1]|(1<<(x));//探索しました
 						  }
 					  }else{//左あり
 						  if(y>0){
 						  row[y-1]=row[y-1]|(1<<(x));//xを1にする
 						  Dist_map[x][y-1]=255;
 						  Left_wall=255;
+						  //最短走行用
+						  short_row[y-1]=short_row[y-1]|(1<<(x));//探索しました
 						  }
 					  }
 					  //前のセンサー
 					  if((g_sensor[0][0]<WALLREAD_FL)&&(g_sensor[3][0]<WALLREAD_FR)){//右なし
 						  column[x-1]=column[x-1]&~(1<<(y));//yビット目を0にする
+						  //最短走行用
+						  short_column[x-1]=short_column[x-1]|(1<<(y));//探索しました用
 					  }else{//前あり
 						  column[x-1]=column[x-1]|(1<<(y));//yビット目を1にする
 						  Dist_map[x-1][y]=255;
 						  Front_wall=255;
+						  //最短走行用
+						  short_column[x-1]=short_column[x-1]|(1<<(y));//探索しました用
 					  }
 					  //右のセンサー
 					  if((float)g_sensor[2][0]<WALLREAD_R){//右がない
 						  row[y]=row[y]&~(1<<(x));//xビット目を0にする
+						  //最短走行用
+						  short_row[y]=short_row[y]|(1<<(x));//探索しました
 					  }else{//右あり
 						  row[y]=row[y]|(1<<(x));//xを1にする
 						  Dist_map[x][y+1]=255;
 						  Right_wall=255;
+						  //最短走行用
+						  short_row[y]=short_row[y]|(1<<(x));//探索しました
 					  }
 					  if(z==-1){
 						  z=3;
@@ -2745,29 +3059,41 @@ void wall_sensor(){
 					  if((float)g_sensor[1][0]<WALLREAD_L){//左なし
 						  if(x>0){
 						  column[x-1]=column[x-1]&~(1<<(y));//yビット目を0にする//0bit目から数えることとする　要は1番目と呼んでいるのを0bit目として判断
+						  //最短走行用
+						  short_column[x-1]=short_column[x-1]|(1<<(y));//探索しました用
 						  }
 					  }else{//左あり
 						  if(x>0){
 						  column[x-1]=column[x-1]|(1<<(y));//yビット目を1にする
 						  Dist_map[x-1][y]=255;
 						  Left_wall=255;
+						  //最短走行用
+						  short_column[x-1]=short_column[x-1]|(1<<(y));//探索しました用
 						  }
 					  }
 					  //前のセンサー
 					  if((g_sensor[0][0]<WALLREAD_FL)&&(g_sensor[3][0]<WALLREAD_FR)){//前なし
 						  row[y]=row[y]&~(1<<(x));//xビット目を0にする
+						  //最短走行用
+						  short_row[y]=short_row[y]|(1<<(x));//探索しました
 					  }else{//前あり
 						  row[y]=row[y]|(1<<(x));//xを1にする
 						  Dist_map[x][y+1]=255;
 						  Front_wall=255;
+						  //最短走行用
+						  short_row[y]=short_row[y]|(1<<(x));//探索しました
 					  }
 					  //右のセンサー
 					  if((float)g_sensor[2][0]<WALLREAD_R){//右がない
 						  column[x]=column[x]&~(1<<(y));//yビット目を0にする
+						  //最短走行用
+						  short_column[x]=short_column[x]|(1<<(y));//探索しました用
 					  }else{//右あり
 						  column[x]=column[x]|(1<<(y));//yビット目を1にする
 						  Dist_map[x+1][y]=255;
 						  Right_wall=255;
+						  //最短走行用
+						  short_column[x]=short_column[x]|(1<<(y));//探索しました用
 					  }
 
 					  if(z==4){
@@ -2778,19 +3104,27 @@ void wall_sensor(){
 					  //左のセンサー
 					  if((float)g_sensor[1][0]<WALLREAD_L){//左なし
 						  row[y]=row[y]&~(1<<(x));//xビット目を0にする
+						  //最短走行用
+						  short_row[y]=short_row[y]|(1<<(x));//探索しました
 					  }else{//左あり
 						  row[y]=row[y]|(1<<(x));//xを1にする
 						  Dist_map[x][y+1]=255;
 						  Left_wall=255;
+						  //最短走行用
+						  short_row[y]=short_row[y]|(1<<(x));//探索しました
 					  }
 					  //前のセンサー
 					  if((g_sensor[0][0]<WALLREAD_FL)&&(g_sensor[3][0]<WALLREAD_FR)){//なし
 
 						  column[x]=column[x]&~(1<<(y));//yビット目を0にする
+						  //最短走行用
+						  short_column[x]=short_column[x]|(1<<(y));//探索しました用
 					  }else{//あり
 						  column[x]=column[x]|(1<<(y));//yビット目を1にする
 						  Dist_map[x+1][y]=255;
 						  Front_wall=255;
+						  //最短走行用
+						  short_column[x]=short_column[x]|(1<<(y));//探索しました用
 					  }
 				  }
 				//南側を見ている　前なし
@@ -2798,21 +3132,29 @@ void wall_sensor(){
 					  //左のセンサー
 					  if((float)g_sensor[1][0]<WALLREAD_L){//左なし
 						  column[x]=column[x]&~(1<<(y));//yビット目を0にする
+						  //最短走行用
+						  short_column[x]=short_column[x]|(1<<(y));//探索しました用
 					  }else{//左あり
 						  column[x]=column[x]|(1<<(y));//yビット目を1にする
 						  Dist_map[x+1][y]=255;
 						  Left_wall=255;
+						  //最短走行用
+						  short_column[x]=short_column[x]|(1<<(y));//探索しました用
 					  }
 					  //右のセンサー
 					  if((float)g_sensor[2][0]<WALLREAD_R){//右がない
 						  if(x>0){
 						  column[x-1]=column[x-1]&~(1<<(y));//yビット目を0にする
+						  //最短走行用
+						  short_column[x-1]=short_column[x-1]|(1<<(y));//探索しました用
 						  }
 					  }else{//右あり
 						  if(x>0){
 						  column[x-1]=column[x-1]|(1<<(y));//yビット目を1にする
 						  Dist_map[x-1][y]=255;
 						  Right_wall=255;
+						  //最短走行用
+						  short_column[x-1]=short_column[x-1]|(1<<(y));//探索しました用
 						  }
 					  }
 				  }
@@ -2822,18 +3164,26 @@ void wall_sensor(){
 					  //前のセンサー
 					  if((g_sensor[0][0]<WALLREAD_FL)&&(g_sensor[3][0]<WALLREAD_FR)){//右なし
 						  column[x-1]=column[x-1]&~(1<<(y));//yビット目を0にする
+						  //最短走行用
+						  short_column[x-1]=short_column[x-1]|(1<<(y));//探索しました用
 					  }else{//前あり
 						  column[x-1]=column[x-1]|(1<<(y));//yビット目を1にする
 						  Dist_map[x+1][y]=255;
 						  Front_wall=255;
+						  //最短走行用
+						  short_column[x-1]=short_column[x-1]|(1<<(y));//探索しました用
 					  }
 					  //右のセンサー
 					  if((float)g_sensor[2][0]<WALLREAD_R){//右がない
 						  row[y]=row[y]&~(1<<(x));//xビット目を0にする
+						  //最短走行用
+						  short_row[y]=short_row[y]|(1<<(x));//探索しました
 					  }else{//右あり
 						  row[y]=row[y]|(1<<(x));//xを1にする
 						  Dist_map[x][y+1]=255;
 						  Right_wall=255;
+						  //最短走行用
+						  short_row[y]=short_row[y]|(1<<(x));//探索しました
 					  }
 					  if(z==-1){
 						  z=3;
@@ -2850,26 +3200,38 @@ void wall_sensor(){
 			  if((float)g_sensor[1][0]<WALLREAD_L){//左なし
 				  if(x>0){
 				  column[x-1]=column[x-1]&~(1<<(y));//yビット目を0にする//0bit目から数えることとする　要は1番目と呼んでいるのを0bit目として判断
+				  //最短走行用
+				  short_column[x-1]=short_column[x-1]|(1<<(y));//探索しました用
 				  }
 			  }else{//左あり
 				  if(x>0){
 				  column[x-1]=column[x-1]|(1<<(y));//yビット目を1にする
 				  Left_wall=255;
+				  //最短走行用
+				  short_column[x-1]=short_column[x-1]|(1<<(y));//探索しました用
 				  }
 			  }
 			  //前のセンサー
 			  if((g_sensor[0][0]<WALLREAD_FL)&&(g_sensor[3][0]<WALLREAD_FR)){//前なし
 				  row[y]=row[y]&~(1<<(x));//xビット目を0にする
+				  //最短走行用
+				  short_row[y]=short_row[y]|(1<<(x));//探索しました
 			  }else{//前あり
 				  row[y]=row[y]|(1<<(x));//xを1にする
 				  Front_wall=255;
+				  //最短走行用
+				  short_row[y]=short_row[y]|(1<<(x));//探索しました
 			  }
 			  //右のセンサー
 			  if((float)g_sensor[2][0]<WALLREAD_R){//右がない
 				  column[x]=column[x]&~(1<<(y));//yビット目を0にする
+				  //最短走行用
+				  short_column[x]=short_column[x]|(1<<(y));//探索しました用
 			  }else{//右あり
 				  column[x]=column[x]|(1<<(y));//yビット目を1にする
 				  Right_wall=255;
+				  //最短走行用
+				  short_column[x]=short_column[x]|(1<<(y));//探索しました用
 			  }
 
 			  if(z==4){
@@ -2879,27 +3241,39 @@ void wall_sensor(){
 			  //左のセンサー
 			  if((float)g_sensor[1][0]<WALLREAD_L){//左なし
 				  row[y]=row[y]&~(1<<(x));//xビット目を0にする
+				  //最短走行用
+				  short_row[y]=short_row[y]|(1<<(x));//探索しました
 			  }else{//左あり
 				  row[y]=row[y]|(1<<(x));//xを1にする
 				  Left_wall=255;
+				  //最短走行用
+				  short_row[y]=short_row[y]|(1<<(x));//探索しました
 			  }
 			  //前のセンサー
 			  if((g_sensor[0][0]<WALLREAD_FL)&&(g_sensor[3][0]<WALLREAD_FR)){//右なし
 
 				  column[x]=column[x]&~(1<<(y));//yビット目を0にする
+				  //最短走行用
+				  short_column[x]=short_column[x]|(1<<(y));//探索しました用
 			  }else{//前あり
 				  column[x]=column[x]|(1<<(y));//yビット目を1にする
 				  Front_wall=255;
+				  //最短走行用
+				  short_column[x]=short_column[x]|(1<<(y));//探索しました用
 			  }
 			  //右のセンサー
 			  if((float)g_sensor[2][0]<WALLREAD_R){//右がない
 				  if(y>0){
 				  row[y-1]=row[y-1]&~(1<<(x));//xビット目を0にする
+				  //最短走行用
+				  short_row[y-1]=short_row[y-1]|(1<<(x));//探索しました
 				  }
 			  }else{//右あり
 				  if(y>0){
 				  row[y-1]=row[y-1]|(1<<(x));//xを1にする
 				  Right_wall=255;
+				  //最短走行用
+				  short_row[y-1]=short_row[y-1]|(1<<(x));//探索しました
 				  }
 			  }
 
@@ -2907,30 +3281,42 @@ void wall_sensor(){
 			  //左のセンサー
 			  if((float)g_sensor[1][0]<WALLREAD_L){//左なし
 				  column[x]=column[x]&~(1<<(y));//yビット目を0にする
+				  //最短走行用
+				  short_column[x]=short_column[x]|(1<<(y));//探索しました用
 			  }else{//左あり
 				  column[x]=column[x]|(1<<(y));//yビット目を1にする
 				  Left_wall=255;
+				  //最短走行用
+				  short_column[x]=short_column[x]|(1<<(y));//探索しました用
 			  }
 			  //前のセンサー
 			  if((g_sensor[0][0]<WALLREAD_FL)&&(g_sensor[3][0]<WALLREAD_FR)){//前なし
 				  if(y>0){
 				  row[y-1]=row[y-1]&~(1<<(x));//xビット目を0にする
+				  //最短走行用
+				  short_row[y-1]=short_row[y-1]|(1<<(x));//探索しました
 				  }
 			  }else{//前あり
 				  if(y>0){
 				  row[y-1]=row[y-1]|(1<<(x));//xを1にする
 				  Front_wall=255;
+				  //最短走行用
+				  short_row[y-1]=short_row[y-1]|(1<<(x));//探索しました
 				  }
 			  }
 			  //右のセンサー
 			  if((float)g_sensor[2][0]<WALLREAD_R){//右がない
 				  if(x>0){
 				  column[x-1]=column[x-1]&~(1<<(y));//yビット目を0にする
+				  //最短走行用
+				  short_column[x-1]=short_column[x-1]|(1<<(y));//探索しました用
 				  }
 			  }else{//右あり
 				  if(x>0){
 				  column[x-1]=column[x-1]|(1<<(y));//yビット目を1にする
 				  Right_wall=255;
+				  //最短走行用
+				  short_column[x-1]=short_column[x-1]|(1<<(y));//探索しました用
 				  }
 			  }
 		  }else if(z==3){//(x,y),西に対して、、
@@ -2939,26 +3325,38 @@ void wall_sensor(){
 			  if((float)g_sensor[1][0]<WALLREAD_L){//左なし
 				  if(y>0){
 				  row[y-1]=row[y-1]&~(1<<(x));//xビット目を0にする
+				  //最短走行用
+				  short_row[y-1]=short_row[y-1]|(1<<(x));//探索しました
 				  }
 			  }else{//左あり
 				  if(y>0){
 				  row[y-1]=row[y-1]|(1<<(x));//xを1にする
 				  Left_wall=255;
+				  //最短走行用
+				  short_row[y-1]=short_row[y-1]|(1<<(x));//探索しました
 				  }
 			  }
 			  //前のセンサー
 			  if((g_sensor[0][0]<WALLREAD_FL)&&(g_sensor[3][0]<WALLREAD_FR)){//前なし
 				  column[x-1]=column[x-1]&~(1<<(y));//yビット目を0にする
+				  //最短走行用
+				  short_column[x-1]=short_column[x-1]|(1<<(y));//探索しました用
 			  }else{//前あり
 				  column[x-1]=column[x-1]|(1<<(y));//yビット目を1にする
 				  Front_wall=255;
+				  //最短走行用
+				  short_column[x-1]=short_column[x-1]|(1<<(y));//探索しました用
 			  }
 			  //右のセンサー
 			  if((float)g_sensor[2][0]<WALLREAD_R){//右がない
 				  row[y]=row[y]&~(1<<(x));//xビット目を0にする
+				  //最短走行用
+				  short_row[y]=short_row[y]|(1<<(x));//探索しました
 			  }else{//右あり
 				  row[y]=row[y]|(1<<(x));//xを1にする
 				  Right_wall=255;
+				  //最短走行用
+				  short_row[y]=short_row[y]|(1<<(x));//探索しました
 			  }
 			  if(z==-1){
 				  z=3;
@@ -3080,8 +3478,8 @@ void continual_adachi_method(void){
 		while(1){
 //			printf("プログラムの初めx=%d,y=%d,z=%d\n\r",x,y,z);
 
-			//ボタンを押したら終了
-			if (HAL_GPIO_ReadPin(SWITCH_2_GPIO_Port,SWITCH_2_Pin)==0){
+			//片方のボタンを押したら終了
+			if ((HAL_GPIO_ReadPin(SWITCH_1_GPIO_Port,SWITCH_1_Pin)==0)||(HAL_GPIO_ReadPin(SWITCH_2_GPIO_Port,SWITCH_2_Pin)==0)){
 				break;
 			}
 			//終了判定
@@ -3177,11 +3575,20 @@ void slalom_continual_adachi_method(void){
 //	  	}
 
 	  	//wall_information_initialize();
+
+	  //片方のボタンを押したら終了
 		while(1){
+
+
+
+			if ((HAL_GPIO_ReadPin(SWITCH_1_GPIO_Port,SWITCH_1_Pin)==0)||(HAL_GPIO_ReadPin(SWITCH_2_GPIO_Port,SWITCH_2_Pin)==0)){
+				break;
+			}else{
+//			}else{
 //			printf("プログラムの初めx=%d,y=%d,z=%d\n\r",x,y,z);
 			//終了判定
 			if((x==goal_x)&&(y==goal_y)){//ゴールに来たら終了
-					trapezoid_accel_forward(2000,100,500,100,90);//90む台形加速の関数
+					trapezoid_accel_forward(2000,500,500,100,90);//90む台形加速の関数
 					motor_pwm_off();
 					HAL_Delay(1000);//1秒経ってから励磁解除
 					motor_excitation_off();//励磁ストップ
@@ -3216,6 +3623,8 @@ void slalom_continual_adachi_method(void){
 			//行動&座標更新
 			slalom_continual_ver_action_based_on_direction_decision_and_coordinate_update();
 //			printf("行動後、座標更新時x=%d,y=%d,z=%d\n\r",x,y,z);
+//			}
+		}
 		}
 }
 

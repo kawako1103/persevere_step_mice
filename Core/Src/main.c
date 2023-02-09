@@ -37,6 +37,8 @@
 #include "log.h"
 #include "wall_control.h"
 #include "explore_method.h"
+#include "shortest_run.h"
+#include "mode.h"
 
 /* USER CODE END Includes */
 
@@ -663,28 +665,83 @@ int main(void)
 //	  		 wait_ms(500);
 
 
-//左手法/足立法のスイッチ
-				  if (HAL_GPIO_ReadPin(SWITCH_2_GPIO_Port,SWITCH_2_Pin)==0){
-					  HAL_Delay(500);//0.5秒経ってからスタート
-//					  left_hand_method_and_Print_Wall();
-//					  left_hand_method();
-//					  left_hand_method_2();//左手法　足立法と一緒に絶対使うな
-//					  adachi_method();//足立法
-					  //continual_adachi_method();//連続足立法
-					  slalom_continual_adachi_method();//スラローム付き連続足立法
+
+//スイッチ するときはモードの条件を外して
+
+	  //モード設定の条件(同時に押されたら設定に入る)
+	  if ((HAL_GPIO_ReadPin(SWITCH_1_GPIO_Port,SWITCH_1_Pin)==0)&&(HAL_GPIO_ReadPin(SWITCH_2_GPIO_Port,SWITCH_2_Pin)==0)){
+		  mode_setting();
+	  }
+/////////////////////////////////////
+//				  if (((HAL_GPIO_ReadPin(SWITCH_2_GPIO_Port,SWITCH_2_Pin)==0))&&((HAL_GPIO_ReadPin(SWITCH_1_GPIO_Port,SWITCH_1_Pin)!=0))){
+//					  HAL_Delay(500);//0.5秒経ってからスタート
+////					  left_hand_method_and_Print_Wall();
+////					  left_hand_method();
+////					  left_hand_method_2();//左手法　足立法と一緒に絶対使うな
+////					  adachi_method();//足立法
+//					  //continual_adachi_method();//連続足立法
+//					  slalom_continual_adachi_method();//スラローム付き連続足立法
+////					  motor_excitation_on();
+////					  motor_pwm_on();
+////					  trapezoid_accel_forward(2000,100,500,100,90);//70む台形加速の関数 連続足立法ね
+////					  motor_pwm_off();
+////					  HAL_Delay(1000);//1秒経ってから励磁解除
+////					  motor_excitation_off();
+////					  step_number();//歩数マップ展開かな
+//				  }
+/////
+////
+////
+//				  if ((HAL_GPIO_ReadPin(SWITCH_1_GPIO_Port,SWITCH_1_Pin)==0)&&((HAL_GPIO_ReadPin(SWITCH_2_GPIO_Port,SWITCH_2_Pin)!=0))){
+////					  Print_Wall();//ボタンを押したら出力
+////					  Print_Wall_2();
+//					  HAL_Delay(500);//0.5秒経ってからスタート
+//					  ///////スタートの動き ウォーミングアップ的な
 //					  motor_excitation_on();
 //					  motor_pwm_on();
-//					  trapezoid_accel_forward(2000,100,500,100,90);//70む台形加速の関数 連続足立法ね
+//  //					  HAL_Delay(500);//0.5秒経ってからスタート
+//					  trapezoid_accel_backward(600,100,300,100,80);//90back台形加速の関数遅くね
+//					  HAL_Delay(500);//
 //					  motor_pwm_off();
-//					  HAL_Delay(1000);//1秒経ってから励磁解除
+//
+//					  motor_pwm_on();
+//					  trapezoid_accel_forward(2000,100,500,500,120);//120む台形加速の関数
+//					  motor_pwm_off();
 //					  motor_excitation_off();
-//					  step_number();//歩数マップ展開かな
-				  }
-				  if (HAL_GPIO_ReadPin(SWITCH_1_GPIO_Port,SWITCH_1_Pin)==0){
-//					  Print_Wall();//ボタンを押したら出力
-					  Print_Wall_2();
-					  HAL_Delay(500);//0.5秒経ってからスタート
-
+//					  					  ///////スタートの動き
+//
+////					  after_explore_shortes_run(500);
+//					  while(1){
+//
+//					  if (HAL_GPIO_ReadPin(SWITCH_1_GPIO_Port,SWITCH_1_Pin)==0){
+//						 pl_lcd_clear();
+//						 pl_timer_init();
+//						 pl_lcd_puts("short_run");//最短走行速度400()
+//						 pl_lcd_pos(1,0);
+//						 pl_lcd_puts("500");
+//						 HAL_Delay(500);//0.5秒経ってからスタート
+//
+//						 after_explore_shortes_run(500);
+//						 pl_lcd_clear();
+//						 pl_timer_init();
+//						 pl_lcd_puts("end");//最短走行速度400()
+//						 pl_lcd_pos(1,0);
+//						 pl_lcd_puts("nice run?");
+//						 HAL_Delay(500);//0.5秒経ってからスタート
+//						 while(1){
+//							 if((HAL_GPIO_ReadPin(SWITCH_1_GPIO_Port,SWITCH_1_Pin)==0)){
+//								 Print_Wall_2();
+//							 }
+//						 }
+//					  }else if (HAL_GPIO_ReadPin(SWITCH_2_GPIO_Port,SWITCH_2_Pin)==0){
+//						  break;
+//					  }
+////					  Print_Wall_2();
+//
+//					  }
+//					  Print_Wall_2();
+// }
+/////////////////////////////////////////
 
 					  ////
 					  ////2700mm(15マス分の連続走行(20mm + 160mmを繰り返すver.)のテスト用)
@@ -707,15 +764,17 @@ int main(void)
 					  ////
 					  ////2700mm(15マス分の連続走行(20mm + 160mmを繰り返すver.)のテスト用)終わり
 					  ////
-					  motor_excitation_on();
-					  motor_pwm_on();
-//					  HAL_Delay(500);//0.5秒経ってからスタート
-					  trapezoid_accel_backward(600,100,300,100,80);//90back台形加速の関数遅くね
-					  HAL_Delay(500);//
-					  motor_pwm_off();
-
-					  motor_pwm_on();
-					  trapezoid_accel_forward(2000,100,500,500,120);//120む台形加速の関数
+					  ///////スタートの動き
+//					  motor_excitation_on();
+//					  motor_pwm_on();
+////					  HAL_Delay(500);//0.5秒経ってからスタート
+//					  trapezoid_accel_backward(600,100,300,100,80);//90back台形加速の関数遅くね
+//					  HAL_Delay(500);//
+//					  motor_pwm_off();
+//
+//					  motor_pwm_on();
+//					  trapezoid_accel_forward(2000,100,500,500,120);//120む台形加速の関数
+					  ///////スタートの動き
 
 //					  ///スラローム調整用 1.5マス進んでslalomで右折 then 180進んで停止
 //					  ////
@@ -732,10 +791,10 @@ int main(void)
 					  //					  slalom_trapezoid_accel_rturn(500,15000,250,460,230,90);
 					  //					  step_ver_trapezoid_accel_forward(2000,500,500,100,20);
 //					  trapezoid_accel_forward(2000,500,500,100,20);
-					  motor_pwm_off();
-					  //
-					  HAL_Delay(1000);//1秒経ってから励磁解除
-					  motor_excitation_off();
+//					  motor_pwm_off();
+//					  //
+//					  HAL_Delay(1000);//1秒経ってから励磁解除
+//					  motor_excitation_off();
 
 					  ///スラローム終
 
@@ -762,7 +821,7 @@ int main(void)
 ////
 //					  HAL_Delay(1000);//1秒経ってから励磁解除
 //					  motor_excitation_off();
-				  }
+
 //				  if(HAL_GPIO_ReadPin(SWITCH_1_GPIO_Port,SWITCH_1_Pin)==0){
 ////					  if(HAL_GPIO_ReadPin(SWITCH_1_GPIO_Port,SWITCH_1_Pin)==0){
 ////						  trapezoid_accel_forward(2000,100,500,100,180);//90む台形加速の関数

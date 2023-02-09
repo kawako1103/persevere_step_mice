@@ -34,9 +34,7 @@ void lcd_data(uint8_t x)
 
 void pl_lcd_puts(const char *s)
 {
-  while(*s) {
-	  lcd_data(*s++);
-  }
+  while(*s) lcd_data(*s++);
 }
 
 // param:
@@ -62,7 +60,7 @@ void pl_lcd_move(uint8_t pos){
 }
 
 void pl_lcd_pos(uint8_t raw, uint8_t col) {
-  lcd_cmd(0x80 | (raw << 6) | col);
+  lcd_cmd(0x80 | ((raw & 0x01) << 6) | col);
 }
 
 void pl_lcd_clear() {
