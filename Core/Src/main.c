@@ -25,6 +25,7 @@
 #include "tim.h"
 #include "usart.h"
 #include "gpio.h"
+#include "math.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -192,7 +193,7 @@ int main(void)
 //	  HAL_GPIO_WritePin(INTERFACELED_GPIO_Port,INTERFACELED_Pin,GPIO_PIN_RESET);
 //	  wait_ms(3000);
 
-	  // test speaker
+//	  // test speaker
 //	 if (HAL_GPIO_ReadPin(SWITCH_1_GPIO_Port,SWITCH_1_Pin)==0){
 //		HAL_GPIO_WritePin(INTERFACELED_GPIO_Port,INTERFACELED_Pin,GPIO_PIN_SET);
 //		HAL_Delay(1000);
@@ -659,7 +660,7 @@ int main(void)
 
 
 //	  //閾値とかはここでセンサー//sensor test
-//	  		 //HAL_ADC_Start_DMA(&hadc1, g_ADCBuffer,sizeof(g_ADCBuffer) / sizeof(uint16_t));
+	  		 //HAL_ADC_Start_DMA(&hadc1, g_ADCBuffer,sizeof(g_ADCBuffer) / sizeof(uint16_t));
 //	  		 printf("BATT=%f\n\r",g_V_batt);
 //	  		 printf("SEN1=%d,SEN2=%d,SEN3=%d,SEN4=%d\n\r", g_sensor[0][0],g_sensor[1][0],g_sensor[2][0],g_sensor[3][0]);
 //	  		 wait_ms(500);
@@ -667,12 +668,18 @@ int main(void)
 
 
 //スイッチ するときはモードの条件を外して
-
+/////////////////////////////////////
+	  ///////////////////////////////
+	  ///////////モード設定用//////////
+	  ///////////////////////////////
 	  //モード設定の条件(同時に押されたら設定に入る)
 	  if ((HAL_GPIO_ReadPin(SWITCH_1_GPIO_Port,SWITCH_1_Pin)==0)&&(HAL_GPIO_ReadPin(SWITCH_2_GPIO_Port,SWITCH_2_Pin)==0)){
 		  mode_setting();
 	  }
 /////////////////////////////////////
+	  ///////////////////////////////
+	  ///////////////////////////////
+	  ///////////////////////////////
 //				  if (((HAL_GPIO_ReadPin(SWITCH_2_GPIO_Port,SWITCH_2_Pin)==0))&&((HAL_GPIO_ReadPin(SWITCH_1_GPIO_Port,SWITCH_1_Pin)!=0))){
 //					  HAL_Delay(500);//0.5秒経ってからスタート
 ////					  left_hand_method_and_Print_Wall();
@@ -692,11 +699,15 @@ int main(void)
 /////
 ////
 ////
-//				  if ((HAL_GPIO_ReadPin(SWITCH_1_GPIO_Port,SWITCH_1_Pin)==0)&&((HAL_GPIO_ReadPin(SWITCH_2_GPIO_Port,SWITCH_2_Pin)!=0))){
-////					  Print_Wall();//ボタンを押したら出力
-////					  Print_Wall_2();
-//					  HAL_Delay(500);//0.5秒経ってからスタート
-//					  ///////スタートの動き ウォーミングアップ的な
+				  if ((HAL_GPIO_ReadPin(SWITCH_1_GPIO_Port,SWITCH_1_Pin)==0)&&((HAL_GPIO_ReadPin(SWITCH_2_GPIO_Port,SWITCH_2_Pin)!=0))){
+//					  Print_Wall();//ボタンを押したら出力
+//					  Print_Wall_2();
+					  HAL_Delay(500);//0.5秒経ってからスタート
+//				  }
+
+					  ////////
+					  ////////
+					  ///////スタートの動き ウォーミングアップ的な
 //					  motor_excitation_on();
 //					  motor_pwm_on();
 //  //					  HAL_Delay(500);//0.5秒経ってからスタート
@@ -709,8 +720,16 @@ int main(void)
 //					  motor_pwm_off();
 //					  motor_excitation_off();
 //					  					  ///////スタートの動き
-//
-////					  after_explore_shortes_run(500);
+//					  //////
+//					  //////
+//					  //////
+
+//					  after_explore_shortes_run(500);
+
+			  ///////////
+			  ///////////最短走行のテスト用やつ
+			  ///////////
+
 //					  while(1){
 //
 //					  if (HAL_GPIO_ReadPin(SWITCH_1_GPIO_Port,SWITCH_1_Pin)==0){
@@ -741,8 +760,21 @@ int main(void)
 //					  }
 //					  Print_Wall_2();
 // }
+				  ///////////
+				  ///////////最短走行のテスト用やつ終わり
+				  ///////////
 /////////////////////////////////////////
-
+				      /////
+				      /////
+				  	  ////////////////壁切れ補正のテスト用
+//				      motor_excitation_on();
+//				      motor_pwm_on();
+//				      step_ver_trapezoid_accel_forward(2000,500,500,500,20);
+//				      wall_cut_detection_trapezoid_accel_forward(2000,500,500,500,160);
+//				      motor_pwm_off();
+//				      HAL_Delay(1000);//1秒経ってから励磁解除
+//				      motor_excitation_off();
+//				  }
 					  ////
 					  ////2700mm(15マス分の連続走行(20mm + 160mmを繰り返すver.)のテスト用)
 					  ////
@@ -764,38 +796,69 @@ int main(void)
 					  ////
 					  ////2700mm(15マス分の連続走行(20mm + 160mmを繰り返すver.)のテスト用)終わり
 					  ////
-					  ///////スタートの動き
-//					  motor_excitation_on();
-//					  motor_pwm_on();
-////					  HAL_Delay(500);//0.5秒経ってからスタート
+					  /////スタートの動き
+					  motor_excitation_on();
+					  motor_pwm_on();
+//					  HAL_Delay(500);//0.5秒経ってからスタート
 //					  trapezoid_accel_backward(600,100,300,100,80);//90back台形加速の関数遅くね
 //					  HAL_Delay(500);//
 //					  motor_pwm_off();
 //
 //					  motor_pwm_on();
-//					  trapezoid_accel_forward(2000,100,500,500,120);//120む台形加速の関数
-					  ///////スタートの動き
+					  trapezoid_accel_forward(2000,100,500,500,120);//120む台形加速の関数
+					  /////スタートの動き
 
 //					  ///スラローム調整用 1.5マス進んでslalomで右折 then 180進んで停止
 //					  ////
-//					  motor_excitation_on();
-//					  motor_pwm_on();
-//					  trapezoid_accel_forward(2000,100,500,500,180);
-//					  step_ver_trapezoid_accel_forward(2000,500,500,500,20);
-//					  slalom_trapezoid_accel_rturn(500,10000,100,460,80,91);//(500,10000,100,460,80,90); (500,17000,100,460,80,90);  (500,20000,100,460,80,90)
-//					  non_wall_control_trapezoid_accel_forward(2000,500,500,500,20);
-//					  step_ver_trapezoid_accel_forward(2000,500,500,500,20);
-//					  trapezoid_accel_forward(2000,500,500,100,160);
-					  /////
-					  //					  step_ver_trapezoid_accel_forward(2000,500,500,500,20);
-					  //					  slalom_trapezoid_accel_rturn(500,15000,250,460,230,90);
-					  //					  step_ver_trapezoid_accel_forward(2000,500,500,100,20);
-//					  trapezoid_accel_forward(2000,500,500,100,20);
-//					  motor_pwm_off();
-//					  //
-//					  HAL_Delay(1000);//1秒経ってから励磁解除
-//					  motor_excitation_off();
+					  motor_excitation_on();
+					  motor_pwm_on();
+					  trapezoid_accel_forward(2000,500,500,500,180);
+					  step_ver_trapezoid_accel_forward(2000,500,500,500,20);
+					  ////////
+					  ////////横壁制御
+					  float control_left_sensor;
+					  float control_right_sensor;
+					  float offset_adjustment_len_rslalom;
+					  float offset_adjustment_len_lslalom;
 
+						if((float)g_sensor[1][0]>=WALLREAD_L){//左あり
+							control_left_sensor = g_sensor[1][0];//オフセットを調整するためのもの
+//							offset_adjustment_len_lslalom =  -1*(0.000001)*pow(control_left_sensor,3)+0.0022*pow(control_left_sensor,2)-1.3589*control_left_sensor+309.07 + 37 ;
+							offset_adjustment_len_rslalom =  -7*(0.000001)*pow(control_left_sensor,3)+0.0068*pow(control_left_sensor,2)-2.4156*control_left_sensor+321.2 + 37 ;
+							///右に曲がるとき, 左センサ(センサ値x)に対しては左向きを正として y = ((37-0)/(901-595))*(x-595)+0 　その後, yだけ左によっているので, yだけオフセットを増やす 両符号
+							///R 0:599/30:485/60:275//74:178
+							///左に曲がるとき, 右センサ(センサ値x)に対しては右向きを正として y = ((37-0)/(599-388.5))*(x-388.5)+0
+						}else{
+							offset_adjustment_len_rslalom = 0;
+						}
+//						offset_slalom_trapezoid_accel_rturn(500,10000,100,460,80,150,43);//r(500,10000,100,460,80,93,75)→; (500,17000,100,460,80,90);  (500,20000,100,460,80,90)
+						offset_slalom_trapezoid_accel_rturn(500,10000,100,460,80,95,75);//r(500,10000,100,460,80,93,75)→; (500,17000,100,460,80,90);  (500,20000,100,460,80,90)
+//						slalom_trapezoid_accel_lturn(500,10000,100,460,80,91,105);//(500,10000,100,460,80,93,105);
+						//スラロームは角度90°を角加速度によって合わせる　→　オフセットを(80のところ)を調整して中心線合わせる
+//						//slalom_trapezoid_accel_rturn(500,17000,100,460,80,92,75);これは多分使わない調整ミスしてた
+						non_wall_control_trapezoid_accel_forward(2000,500,500,500,20 + offset_adjustment_len_rslalom);//横壁制御分入れた
+						////////
+						////////
+					  //////
+					  //////横壁制御なしver.
+					  //////
+					  //slalom_trapezoid_accel_rturn(500,10000,100,460,80,91);//(500,10000,100,460,80,90); (500,17000,100,460,80,90);  (500,20000,100,460,80,90)
+					  //non_wall_control_trapezoid_accel_forward(2000,500,500,500,20);
+					  non_wall_control_step_ver_trapezoid_accel_forward(2000,500,500,500,20);
+
+					  ///壁制御なし
+					  non_wall_control_trapezoid_accel_forward(2000,500,500,100,160);
+					  ///////trapezoid_accel_forward(2000,500,500,100,160);
+					  ///
+					  					  ////step_ver_trapezoid_accel_forward(2000,500,500,500,20);
+					  					  ////slalom_trapezoid_accel_rturn(500,15000,250,460,230,90);
+					  					  ////step_ver_trapezoid_accel_forward(2000,500,500,100,20);
+					  	  	  	  	  	  ////trapezoid_accel_forward(2000,500,500,100,20);
+					  motor_pwm_off();
+					  //
+					  HAL_Delay(1000);//1秒経ってから励磁解除
+					  motor_excitation_off();
+				  }
 					  ///スラローム終
 
 //					  		  motor_pwm_off();
@@ -824,14 +887,24 @@ int main(void)
 
 //				  if(HAL_GPIO_ReadPin(SWITCH_1_GPIO_Port,SWITCH_1_Pin)==0){
 ////					  if(HAL_GPIO_ReadPin(SWITCH_1_GPIO_Port,SWITCH_1_Pin)==0){
-////						  trapezoid_accel_forward(2000,100,500,100,180);//90む台形加速の関数
-//
-////						  trapezoid_accel_rturn(2000,100,400,80,90);//左90°曲がる
-////						  trapezoid_accel_rturn(2000,100,400,80,90);//左90°曲がる
-////						  trapezoid_accel_rturn(2000,100,400,80,90);//左90°曲がる
-////						  trapezoid_accel_rturn(2000,100,400,80,90);//左90°曲がる
-////						  trapezoid_accel_backward(2000,100,300,100,80);//90back台形加速の関数遅くね
-////					  }
+//						  trapezoid_accel_forward(2000,100,500,100,180);//90む台形加速の関数
+
+//						  trapezoid_accel_lturn(2000,100,400,80,90);//左90°曲がる
+//						  motor_pwm_off();
+//						  motor_pwm_on();
+//						  trapezoid_accel_lturn(2000,100,400,80,90);//左90°曲がる
+//						  motor_pwm_off();
+//						  motor_pwm_on();
+//						  trapezoid_accel_lturn(2000,100,400,80,90);//左90°曲がる
+//						  motor_pwm_off();
+//						  motor_pwm_on();
+//						  trapezoid_accel_lturn(2000,100,400,80,90);//左90°曲がる
+//////						  trapezoid_accel_backward(2000,100,300,100,80);//90back台形加速の関数遅くね
+//////					  }
+//						  motor_pwm_off();
+//						 //
+//						 					  HAL_Delay(1000);//1秒経ってから励磁解除
+//						 					  motor_excitation_off();
 //				  }
 
 //				  if(HAL_GPIO_ReadPin(SWITCH_1_GPIO_Port,SWITCH_1_Pin)==0){

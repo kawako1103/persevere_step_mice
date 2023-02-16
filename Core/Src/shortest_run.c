@@ -4,6 +4,10 @@
  *  Created on: 2023/02/07
  *      Author: kawaguchitakahito
  */
+#include "stdlib.h"
+#include "PL_lcd.h"
+#include "pl_timer.h"
+#include "speaker.h"
 
 #include "Motor_Run.h"
 #include "PL_sensor.h"
@@ -11,6 +15,7 @@
 #include "wall_control.h"
 #include "stdio.h"
 #include "explore_method.h"
+
 
 int pass[255];
 int n;
@@ -566,7 +571,7 @@ if(z==0||z==4){//(x,y),北に対して、//前Dist_map[x][y+1]→右Dist_map[x+1
 			  z=3;
 		  }
 	  }
-//	printf("MIN=%d,direction=%d",MIN,direction);
+	printf("MIN=%d,direction=%d",MIN,direction);
 Dist_map[goal_x][goal_y]=0;
 }
 
@@ -753,10 +758,33 @@ void imaginary_run_and_pass_determination(void){
 //				    pass[nmax]=1;
 					break;//無限ループから脱出
 			}
-		  void short_step_number_revised();//歩数マップを作る(壁塞いだやつも含め)
-		  void short_least_step_judgement_and_action_decision();//方向の決定(directionで向きを決めている)とpassへの値入れ
-		  void short_action_based_on_direction_decision_and_coordinate_update();//directionに従って座標と向きの更新x,y,zはここで変わっている
+//			printf("行動前、座標x=%d,y=%d,z=%d\n\r",x,y,z);
 
+			////保存済の壁情報をもとに仮想上の走行での壁認識として働く
+			short_ver_wall_sensor();//保存している壁に対して255とか入れるやつ
+
+			////歩数マップ作り
+			before_step_number_revised();//
+			short_step_number_revised();//歩数マップを作る(壁塞いだやつも含め)
+
+			////歩数マップをもとに行動決定と仮想上での行動後、座標更新 passについてもここで
+		  short_least_step_judgement_and_action_decision();//方向の決定(directionで向きを決めている)とpassへの値入れ
+		  short_action_based_on_direction_decision_and_coordinate_update();//directionに従って座標と向きの更新x,y,zはここで変わっている
+//		  printf("行動後、座標更新時x=%d,y=%d,z=%d\n\r",x,y,z);
+
+		  ////////////////
+		  ////////////////最初だけ出して一回止める
+//		  Print_Wall_2();
+		  ////////////////
+		  ////////////////
+//		  					 HAL_Delay(1000);
+//		  n += 1; //goalの区画に入る境目で終わるのでその後90進んでほしい
+		  ///////////////////////////////
+		  	 	 char strBuffer[17] = {0};
+		  	 	 sprintf(strBuffer, "n=%04d", n);
+		  	 	 pl_lcd_pos(1, 0);
+		  	 	 pl_lcd_puts(strBuffer);
+		 //////////////////////////////////
 		  n += 1; //goalの区画に入る境目で終わるのでその後90進んでほしい
 	  }
 
@@ -776,10 +804,10 @@ void shortest_run_action_based_on_direction_decision_and_coordinate_update(float
 		  trapezoid_accel_forward(2000,v,v,v,90);
 		}
 	}else if(pass[n]==-2){//速度は調整する必要があり(v = 500で調整したパラメータなので、)
-		slalom_trapezoid_accel_lturn(v,10000,100,460,80,91);//(500,10000,100,460,80,90); (500,17000,100,460,80,90);  (500,20000,100,460,80,90)
+		slalom_trapezoid_accel_lturn(500,10000,100,460,80,91,105);//(500,10000,100,460,80,90); (500,17000,100,460,80,90);  (500,20000,100,460,80,90)
 		non_wall_control_trapezoid_accel_forward(2000,v,v,v,20);
 	}else if(pass[n]==-3){
-		slalom_trapezoid_accel_rturn(v,10000,100,460,80,91);//(500,10000,100,460,80,90); (500,17000,100,460,80,90);  (500,20000,100,460,80,90)
+		slalom_trapezoid_accel_lturn(500,10000,100,460,80,91,75);//(500,10000,100,460,80,90); (500,17000,100,460,80,90);  (500,20000,100,460,80,90)
 		non_wall_control_trapezoid_accel_forward(2000,v,v,v,20);
 	}
 

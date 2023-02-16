@@ -11,6 +11,7 @@
 
 void left_hand_method();
 void left_hand_method_2();
+void buried_Print_Wall();
 void Print_Wall();
 void left_hand_method_and_Print_Wall();
 void step_number();
@@ -27,6 +28,7 @@ void action_based_on_direction_decision_and_coordinate_update();
 void continual_ver_action_based_on_direction_decision_and_coordinate_update();
 void slalom_continual_ver_action_based_on_direction_decision_and_coordinate_update();
 void wall_sensor();
+void short_ver_wall_sensor();
 void adachi_method();
 void continual_adachi_method();
 void slalom_continual_adachi_method();

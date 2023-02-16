@@ -23,6 +23,7 @@
 #include "wall_control.h"
 #include "explore_method.h"
 #include "shortest_run.h"
+#include "speaker.h"
 //モードの設定
 //液晶に表示させるやつ
 
@@ -44,7 +45,8 @@ void warming_up(void){
 	 pl_lcd_puts("be careful");//最短走行速度400()
 	 pl_lcd_pos(1,0);
 	 pl_lcd_puts("warm up");
-	 HAL_Delay(1000);
+	 ring_caution();
+	 HAL_Delay(500);
 	 ///////スタートの動き ウォーミングアップ的な
 		  motor_excitation_on();
 		  motor_pwm_on();
@@ -72,31 +74,38 @@ void before_start_count(){
 	 pl_lcd_clear();
 	 pl_timer_init();
 	 pl_lcd_puts("3");//最短走行速度500()
+	 ring_step();
 	 pl_lcd_pos(1,0);
 //				 pl_lcd_puts("500");
 	 HAL_Delay(1000);
 	 pl_lcd_clear();
 	 pl_timer_init();
 	 pl_lcd_puts("2");//最短走行速度500()
+	 ring_step();
 	 pl_lcd_pos(1,0);
 	 HAL_Delay(1000);//1秒経ってからスタート
 	 pl_lcd_clear();
 	 pl_timer_init();
 	 pl_lcd_puts("1");//最短走行速度500()
+	 ring_step();
 	 pl_lcd_pos(1,0);
 	 HAL_Delay(1000);//1秒経ってからスタート
+	 ring_start();
 	 pl_lcd_clear();
 	 pl_timer_init();
 }
 
 
 void mode_setting(){
+	ring_step();
 	HAL_Delay(1000);
 // if ((HAL_GPIO_ReadPin(SWITCH_1_GPIO_Port,SWITCH_1_Pin)==0)||(HAL_GPIO_ReadPin(SWITCH_2_GPIO_Port,SWITCH_2_Pin)==0)){//SW1もしくはSW2を押したら設定画面へ
 	 while(1){//設定画面 初期設定はスラローム探索速度500
 //		 HAL_Delay(1000);
 		 //SW1を押したら他の選択肢(探索スラローム単体か　最短走行のスラロームか、、)
 		 if(HAL_GPIO_ReadPin(SWITCH_1_GPIO_Port,SWITCH_1_Pin)==0){
+			 ring_step();
+			 HAL_Delay(500);
 			 while(1){
 				 //SW2だけ押されたら連続足立法
 				 if ((HAL_GPIO_ReadPin(SWITCH_2_GPIO_Port,SWITCH_2_Pin)==0)&&(HAL_GPIO_ReadPin(SWITCH_1_GPIO_Port,SWITCH_1_Pin)!=0)){
@@ -108,20 +117,22 @@ void mode_setting(){
 					 			HAL_Delay(500);
 								 pl_lcd_clear();
 								 pl_timer_init();
+								 ring_start();
 								 pl_lcd_puts("exploring...");//
 								 pl_lcd_pos(1,0);
 					 			continual_adachi_method();//連続足立法
 								 pl_lcd_clear();
 								 pl_timer_init();
 								 pl_lcd_puts("End");//
+								 ring_end();
 								 pl_lcd_pos(1,0);
 					 			break;
 					 			}
 					 }
 					 //TBD
-				 //SW1とSW2どちらも押されたらもどる
-				 }else if ((HAL_GPIO_ReadPin(SWITCH_1_GPIO_Port,SWITCH_1_Pin)==0)&&(HAL_GPIO_ReadPin(SWITCH_2_GPIO_Port,SWITCH_2_Pin)==0)){
-
+				 //SW1押されたらもどる
+				 }else if ((HAL_GPIO_ReadPin(SWITCH_1_GPIO_Port,SWITCH_1_Pin)==0)&&(HAL_GPIO_ReadPin(SWITCH_2_GPIO_Port,SWITCH_2_Pin)!=0)){
+					 ring_step();
 					 break;
 				 }
 			 pl_lcd_clear();
@@ -158,15 +169,26 @@ void mode_setting(){
 					 //ウォーミングアップ終わったらボタンを押して探索開始　その後次のwhile分へ
 					 while(1){
 					 if (HAL_GPIO_ReadPin(SWITCH_2_GPIO_Port,SWITCH_2_Pin)==0){
+						 ring_step();
 						 HAL_Delay(500);
 						 pl_lcd_clear();
 						 pl_timer_init();
+						 ring_start();
 						 pl_lcd_puts("exploring...");//
 						 pl_lcd_pos(1,0);
 						 slalom_continual_adachi_method();//スラローム付き連続足立法
 						 pl_lcd_clear();
 						 pl_timer_init();
 						 pl_lcd_puts("End");//
+						 ring_end();
+						 pl_lcd_pos(1,0);
+						 /////終わった瞬間に歩数マップ作る
+						 /////探索済の壁を塞ぐやつ
+						 buried_Print_Wall();
+						 pl_lcd_clear();
+						 pl_timer_init();
+						 pl_lcd_puts("buried");//
+						 ring_end();
 						 pl_lcd_pos(1,0);
 						 break;
 					 }
@@ -174,12 +196,17 @@ void mode_setting(){
 
 			 //終了したら
 			 while(1){
+			////////壁情報を消す場合は電源を消してね
+			////////
 			 if(HAL_GPIO_ReadPin(SWITCH_1_GPIO_Port,SWITCH_1_Pin)==0){
+				 ring_step();
 				 while(1){
 					 if(HAL_GPIO_ReadPin(SWITCH_1_GPIO_Port,SWITCH_1_Pin)==0){
+						 ring_step();
 						 HAL_Delay(500);
 						 break;
 					 }else if((HAL_GPIO_ReadPin(SWITCH_2_GPIO_Port,SWITCH_2_Pin)==0)){
+						 ring_step();
 						 pl_lcd_clear();
 						 pl_timer_init();
 						 pl_lcd_puts("short_slalom");//最短走行速度400()
@@ -197,12 +224,43 @@ void mode_setting(){
 				 }
 
 			 }else if (HAL_GPIO_ReadPin(SWITCH_2_GPIO_Port,SWITCH_2_Pin)==0){
+//				 /////
+//				 /////探索済の壁を塞ぐやつ
+//				 buried_Print_Wall();
+
+				 Print_Wall_2();
+				 ring_step();
 				 before_start_count();
 
 				 pl_lcd_puts("Go!!!!");//最短走行速度500()
 				 pl_lcd_pos(1,0);
 				 pl_lcd_puts("500");
+
+				 //////最短走行テスト用
+//				 imaginary_run_and_pass_determination();
 				 after_explore_shortes_run(500);
+				 pl_lcd_clear();
+				 pl_timer_init();
+				 pl_lcd_puts("End");//
+				 ring_end();
+				 pl_lcd_pos(1,0);
+				 while(1){
+					 if (HAL_GPIO_ReadPin(SWITCH_2_GPIO_Port,SWITCH_2_Pin)==0){
+						 HAL_Delay(500);
+					 Print_Wall_2();
+					 for(int n=0;n<=nmax;n++){
+					 		   printf("pass[%d]=%d\n\r", n, pass[n]);
+					 	  }
+					 HAL_Delay(1000);
+					 pl_lcd_clear();
+					 pl_timer_init();
+					 pl_lcd_puts("Print_Wall_2");//
+					 ring_end();
+					 pl_lcd_pos(1,0);
+					 break;
+					 }
+				 }
+//				 after_explore_shortes_run(500);
 				 }
 			 pl_lcd_clear();
 			 pl_timer_init();

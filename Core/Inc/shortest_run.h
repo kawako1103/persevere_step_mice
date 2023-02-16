@@ -16,4 +16,6 @@ void shortest_run_action_based_on_direction_decision_and_coordinate_update(float
 void shortest_run(float);
 void after_explore_shortes_run(float);
 
+extern int pass[255];
+extern int nmax;
 #endif /* INC_SHORTEST_RUN_H_ */
