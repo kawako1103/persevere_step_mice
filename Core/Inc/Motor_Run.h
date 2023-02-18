@@ -24,6 +24,7 @@ void trapezoid_accel_backward(float,float,float,float,float);
 void trapezoid_accel_lturn(float,float,float,float,float);
 void trapezoid_accel_rturn(float,float,float,float,float);
 void slalom_trapezoid_accel_lturn(float,float,float,float,float,float,float);//500:105
+void offset_slalom_trapezoid_accel_lturn(float,float,float,float,float,float,float);//500:105
 void slalom_trapezoid_accel_rturn(float,float,float,float,float,float,float);//500:75
 void offset_slalom_trapezoid_accel_rturn(float,float,float,float,float,float,float);//500:75
 extern float accm;

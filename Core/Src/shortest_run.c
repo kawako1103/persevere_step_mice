@@ -800,15 +800,15 @@ void shortest_run_action_based_on_direction_decision_and_coordinate_update(float
 	if(pass[n]>0){//前向き
 		//半区画 90 mm 直進 速度を可変//90ずつ走っているが、距離の方を調整したほうがいいのかもしれない
 		int i;
-		for(i=0;i<=pass[n];i++){
+		for(i=1;i<=pass[n];i++){
 		  trapezoid_accel_forward(2000,v,v,v,90);
 		}
-	}else if(pass[n]==-2){//速度は調整する必要があり(v = 500で調整したパラメータなので、)
-		slalom_trapezoid_accel_lturn(500,10000,100,460,80,91,105);//(500,10000,100,460,80,90); (500,17000,100,460,80,90);  (500,20000,100,460,80,90)
-		non_wall_control_trapezoid_accel_forward(2000,v,v,v,20);
-	}else if(pass[n]==-3){
-		slalom_trapezoid_accel_lturn(500,10000,100,460,80,91,75);//(500,10000,100,460,80,90); (500,17000,100,460,80,90);  (500,20000,100,460,80,90)
-		non_wall_control_trapezoid_accel_forward(2000,v,v,v,20);
+	}else if(pass[n]==-2){//左:速度は調整する必要があり(v = 500で調整したパラメータなので、)
+		offset_slalom_trapezoid_accel_lturn(500,10000,100,460,80,96.9,90.8);//(500,10000,100,460,80,90); (500,17000,100,460,80,90);  (500,20000,100,460,80,90)
+		non_wall_control_trapezoid_accel_forward(2000,v,v,v,38);
+	}else if(pass[n]==-3){//右
+		offset_slalom_trapezoid_accel_rturn(500,10000,100,460,80,97,79);////(500,10000,100,460,80,90); (500,17000,100,460,80,90);  (500,20000,100,460,80,90)
+		non_wall_control_trapezoid_accel_forward(2000,v,v,v,38);
 	}
 
 }//終わり
@@ -847,5 +847,11 @@ void shortest_run(float v){
 
 void after_explore_shortes_run(float v){
 	imaginary_run_and_pass_determination();//passの決定
+	ring_step();
+	 before_start_count();
+
+	 pl_lcd_puts("Go!!!!");//最短走行速度500()
+	 pl_lcd_pos(1,0);
+	 pl_lcd_puts("500");
 	shortest_run(v);//最短走行実施
 }

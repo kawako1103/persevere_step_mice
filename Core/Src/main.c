@@ -680,8 +680,8 @@ int main(void)
 	  ///////////////////////////////
 	  ///////////////////////////////
 	  ///////////////////////////////
-//				  if (((HAL_GPIO_ReadPin(SWITCH_2_GPIO_Port,SWITCH_2_Pin)==0))&&((HAL_GPIO_ReadPin(SWITCH_1_GPIO_Port,SWITCH_1_Pin)!=0))){
-//					  HAL_Delay(500);//0.5秒経ってからスタート
+				  if (((HAL_GPIO_ReadPin(SWITCH_2_GPIO_Port,SWITCH_2_Pin)==0))&&((HAL_GPIO_ReadPin(SWITCH_1_GPIO_Port,SWITCH_1_Pin)!=0))){
+					  HAL_Delay(500);//0.5秒経ってからスタート
 ////					  left_hand_method_and_Print_Wall();
 ////					  left_hand_method();
 ////					  left_hand_method_2();//左手法　足立法と一緒に絶対使うな
@@ -695,7 +695,37 @@ int main(void)
 ////					  HAL_Delay(1000);//1秒経ってから励磁解除
 ////					  motor_excitation_off();
 ////					  step_number();//歩数マップ展開かな
-//				  }
+				motor_excitation_on();
+				motor_pwm_on();
+//	  	  	  	trapezoid_accel_lturn(2000,100,400,80,180);//左180°曲がる
+//	  			motor_pwm_off();
+//	  			motor_pwm_on();
+//	  //			trapezoid_accel_backward(1000,100,300,100,80);
+//	  //			motor_pwm_off();
+//	  //			motor_pwm_on();
+	  			trapezoid_accel_lturn(2000,100,400,80,90);//左90°曲がる
+	  			motor_pwm_off();
+	  			motor_pwm_on();
+//
+	  			trapezoid_accel_backward(2000,100,200,100,80);
+	  			motor_pwm_off();
+	  			motor_pwm_on();
+
+	  			non_wall_control_trapezoid_accel_forward(2000,100,300,100,30);//ここで中心にこれているか　左右で傾いていないか
+	  			motor_pwm_off();
+	  			motor_pwm_on();
+	  			trapezoid_accel_lturn(2000,100,400,80,90);//90°曲がる
+	  			motor_pwm_off();
+	  			motor_pwm_on();
+	  			trapezoid_accel_backward(2000,100,200,100,80);
+	  			motor_pwm_off();
+	  			motor_pwm_on();
+	  			trapezoid_accel_forward(2000,100,500,500,120);//ここで中心にこれているか　左右で傾いていないか
+	  			motor_pwm_off();
+	  			HAL_Delay(1000);//0.5秒経ってからスタート
+	  			motor_excitation_off();
+
+				  }
 /////
 ////
 ////
@@ -821,22 +851,25 @@ int main(void)
 					  float offset_adjustment_len_rslalom;
 					  float offset_adjustment_len_lslalom;
 
-						if((float)g_sensor[1][0]>=WALLREAD_L){//左あり
-							control_left_sensor = g_sensor[1][0];//オフセットを調整するためのもの
-//							offset_adjustment_len_lslalom =  -1*(0.000001)*pow(control_left_sensor,3)+0.0022*pow(control_left_sensor,2)-1.3589*control_left_sensor+309.07 + 37 ;
-							offset_adjustment_len_rslalom =  -7*(0.000001)*pow(control_left_sensor,3)+0.0068*pow(control_left_sensor,2)-2.4156*control_left_sensor+321.2 + 37 ;
-							///右に曲がるとき, 左センサ(センサ値x)に対しては左向きを正として y = ((37-0)/(901-595))*(x-595)+0 　その後, yだけ左によっているので, yだけオフセットを増やす 両符号
-							///R 0:599/30:485/60:275//74:178
-							///左に曲がるとき, 右センサ(センサ値x)に対しては右向きを正として y = ((37-0)/(599-388.5))*(x-388.5)+0
-						}else{
-							offset_adjustment_len_rslalom = 0;
-						}
-//						offset_slalom_trapezoid_accel_rturn(500,10000,100,460,80,150,43);//r(500,10000,100,460,80,93,75)→; (500,17000,100,460,80,90);  (500,20000,100,460,80,90)
-						offset_slalom_trapezoid_accel_rturn(500,10000,100,460,80,95,75);//r(500,10000,100,460,80,93,75)→; (500,17000,100,460,80,90);  (500,20000,100,460,80,90)
-//						slalom_trapezoid_accel_lturn(500,10000,100,460,80,91,105);//(500,10000,100,460,80,93,105);
+//						if((float)g_sensor[1][0]>=WALLREAD_L){//左あり
+//							control_left_sensor = g_sensor[1][0];//オフセットを調整するためのもの
+////							offset_adjustment_len_lslalom =  -1*(0.000001)*pow(control_left_sensor,3)+0.0022*pow(control_left_sensor,2)-1.3589*control_left_sensor+309.07 + 37 ;
+//							offset_adjustment_len_rslalom =  -7*(0.000001)*pow(control_left_sensor,3)+0.0068*pow(control_left_sensor,2)-2.4156*control_left_sensor+321.2 + 37 ;
+//							///右に曲がるとき, 左センサ(センサ値x)に対しては左向きを正として y = ((37-0)/(901-595))*(x-595)+0 　その後, yだけ左によっているので, yだけオフセットを増やす 両符号
+//							///R 0:599/30:485/60:275//74:178
+//							///左に曲がるとき, 右センサ(センサ値x)に対しては右向きを正として y = ((37-0)/(599-388.5))*(x-388.5)+0
+//						}else{
+//							offset_adjustment_len_rslalom = 0;
+//						}
+//										offset_slalom_trapezoid_accel_rturn(500,10000,100,460,80,150,43);//r(500,10000,100,460,80,93,75)→; (500,17000,100,460,80,90);  (500,20000,100,460,80,90)
+						offset_slalom_trapezoid_accel_rturn(500,10000,100,460,80,97,79);///これでいく(20mm全身で左に5度くらい傾いているからあえて回転角度を下げている感じになっている)r(500,10000,100,460,80,98,68);//r(500,10000,100,460,80,93,75)→; (500,17000,100,460,80,90);  (500,20000,100,460,80,90)
+//						offset_slalom_trapezoid_accel_lturn(500,10000,100,460,80,96.9,90.8);//2/17 20:16これでいく
+						//slalom_trapezoid_accel_lturn(500,10000,100,460,80,91,105);//(500,10000,100,460,80,93,105);
 						//スラロームは角度90°を角加速度によって合わせる　→　オフセットを(80のところ)を調整して中心線合わせる
 //						//slalom_trapezoid_accel_rturn(500,17000,100,460,80,92,75);これは多分使わない調整ミスしてた
-						non_wall_control_trapezoid_accel_forward(2000,500,500,500,20 + offset_adjustment_len_rslalom);//横壁制御分入れた
+						non_wall_control_trapezoid_accel_forward(2000,500,500,500,38);//横壁制御分入れた
+						//↓横壁制御用
+//						non_wall_control_trapezoid_accel_forward(2000,500,500,500,20 + offset_adjustment_len_rslalom);//横壁制御分入れた
 						////////
 						////////
 					  //////

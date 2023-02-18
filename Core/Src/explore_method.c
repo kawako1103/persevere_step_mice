@@ -36,8 +36,8 @@ int Left_wall;
 int hip_adjustment=0;
 
 //ゴール座標をここに入力
-int goal_x=4;
-int goal_y=1;
+int goal_x=7;
+int goal_y=7;
 int count;
 int MIN;
 
@@ -147,6 +147,9 @@ void wall_information_initialize(void){
 	 short_column[a]=0b0000000000000000;
 	 short_row[a]=0b0000000000000000;
      }
+	 ///端っこだけ壁入れとく
+	 column[15]=0b1111111111111111;
+	 row[15]=0b1111111111111111;
 
 }
 
@@ -230,13 +233,36 @@ void hip_drop(void){
 		  trapezoid_accel_forward(2000,500,500,100,70);//90む台形加速の関数
 			motor_pwm_off();
 			motor_pwm_on();
-		  trapezoid_accel_lturn(2000,100,400,80,180);//左180°曲がる
+			////////////////////////
+			//横にも位置合わせした方がいいかと思ったが、Mが中心に来ていないといけないからここは180°ターンでとりあえずの角度調整でいいかも　あとは壁制御で調整かな
+			//なんかあった時用 もし入れるときは180°ターン~120進むまでを消して
+			trapezoid_accel_lturn(2000,100,400,80,90);//左90°曲がる
 			motor_pwm_off();
 			motor_pwm_on();
-		  trapezoid_accel_backward(1000,100,300,100,80);//90back台形加速の関数遅くね
-		  motor_pwm_off();
-		  motor_pwm_on();
-		  trapezoid_accel_forward(2000,100,500,500,120);//120む台形加速の関数
+//
+			trapezoid_accel_backward(2000,100,200,100,80);
+			motor_pwm_off();
+			motor_pwm_on();
+
+			non_wall_control_trapezoid_accel_forward(2000,100,300,100,30);//ここで中心にこれているか　左右で傾いていないか
+			motor_pwm_off();
+			motor_pwm_on();
+			trapezoid_accel_lturn(2000,100,400,80,90);//90°曲がる
+			motor_pwm_off();
+			motor_pwm_on();
+			trapezoid_accel_backward(2000,100,200,100,80);
+			motor_pwm_off();
+			motor_pwm_on();
+			trapezoid_accel_forward(2000,100,500,500,120);//ここで中心にこれているか　左右で傾いていないか
+
+			//////////////////////////////
+//		  trapezoid_accel_lturn(2000,100,400,80,180);//左180°曲がる
+//			motor_pwm_off();
+//			motor_pwm_on();
+//		  trapezoid_accel_backward(1000,100,300,100,80);//90back台形加速の関数遅くね
+//		  motor_pwm_off();
+//		  motor_pwm_on();
+//		  trapezoid_accel_forward(2000,100,500,500,120);//120む台形加速の関数
 }
 	hip_adjustment=0;
 }
@@ -245,13 +271,13 @@ void hip_drop(void){
 void least_step_judgement_and_action_decision(void){
 	if(z==0||z==4){//(x,y),北に対して、//前Dist_map[x][y+1]→右Dist_map[x+1][y]→左Dist_map[x-1][y]→後Dist_map[x][y-1]
 		//前後左右最も小さい歩数を決定
-		if(y<16){
+		if(y<15){
 		MIN=Dist_map[x][y+1];
 		}else{
 			MIN=255;
 		}
 
-		if((x<16)&&(MIN>Dist_map[x+1][y])){
+		if((x<15)&&(MIN>Dist_map[x+1][y])){
 			MIN=Dist_map[x+1][y];
 			}
 		if((x>0)&&(MIN>Dist_map[x-1][y])){
@@ -273,9 +299,9 @@ void least_step_judgement_and_action_decision(void){
 //		}
 
 		//Mの向きを決めて行動決定に繋げる
-		if((y<16)&&(MIN==Dist_map[x][y+1])){
+		if((y<15)&&(MIN==Dist_map[x][y+1])){
 			direction=0;//前向き
-		}else if((x<16)&&(MIN==Dist_map[x+1][y])){
+		}else if((x<15)&&(MIN==Dist_map[x+1][y])){
 			direction=1;//右向き
 //			if((x>0)&&((row[y]&(1<<x))==(1<<x))&&((column[x-1]&(1<<y))==(1<<y))){//前壁かつ左壁あればそれぞれにケツあて(hip_adjustment=1;90前進/180°旋回/遅く90後進/30前進//90°左旋回/遅く90後進/120前進)
 //				hip_adjustment=1;
@@ -300,7 +326,7 @@ void least_step_judgement_and_action_decision(void){
 			  }
 	}else if(z==1){//(x,y),東に対して、、//前Dist_map[x+1][y]→右Dist_map[x][y-1]→左Dist_map[x][y+1]→後Dist_map[x-1][y]
 		//前後左右最も小さい歩数を決定
-		if(x<16){
+		if(x<15){
 			MIN=Dist_map[x+1][y];
 		}else{
 			MIN = 255;
@@ -310,7 +336,7 @@ void least_step_judgement_and_action_decision(void){
 		}else{
 			MIN=MIN;
 		}
-		if((y<16)&&(MIN>Dist_map[x][y+1])){
+		if((y<15)&&(MIN>Dist_map[x][y+1])){
 			MIN=Dist_map[x][y+1];
 		}
 		if((x>0)&&(MIN>Dist_map[x-1][y])){
@@ -318,7 +344,7 @@ void least_step_judgement_and_action_decision(void){
 		}else{
 			MIN=MIN;
 		}
-		if((y<16)&&(MIN>Dist_map[x][y+1])){
+		if((y<15)&&(MIN>Dist_map[x][y+1])){
 			MIN=Dist_map[x][y+1];
 		}
 		if((x>0)&&(MIN>Dist_map[x-1][y])){
@@ -327,14 +353,14 @@ void least_step_judgement_and_action_decision(void){
 			MIN=MIN;
 		}
 		//Mの向きを決めて行動決定に繋げる
-		if((x<16)&&(MIN==Dist_map[x+1][y])){
+		if((x<15)&&(MIN==Dist_map[x+1][y])){
 			direction=0;//前向き
 		}else if((y>0)&&(MIN==Dist_map[x][y-1])){
 			direction=1;//右向き
 //			if(((column[x]&(1<<y))==(1<<y))&&((row[y]&(1<<x))==(1<<x))){//前壁かつ左壁あればそれぞれにケツあて(hip_adjustment=1;90前進/180°旋回/90後進/30前進/90°左旋回/90後進/120前進)
 //				hip_adjustment=1;
 //			}
-		}else if((y<16)&&(MIN==Dist_map[x][y+1])){
+		}else if((y<15)&&(MIN==Dist_map[x][y+1])){
 			direction=2;//左向き
 //			if((y>0)&&((column[x]&(1<<y))==(1<<y))&&((row[y-1]&(1<<x))==(1<<x))){//前壁かつ右壁あればそれぞれにケツあて(hip_adjustment=2;90前進/180°旋回/90後進/30前進/90°右旋回/90後進/120前進)
 //				hip_adjustment=2;
@@ -359,10 +385,10 @@ void least_step_judgement_and_action_decision(void){
 		}else {
 			MIN=MIN;
 		}
-		if((x<16)&&(MIN>Dist_map[x+1][y])){
+		if((x<15)&&(MIN>Dist_map[x+1][y])){
 			MIN=Dist_map[x+1][y];
 		}
-		if((y<16)&&(MIN>Dist_map[x][y+1])){
+		if((y<15)&&(MIN>Dist_map[x][y+1])){
 			MIN=Dist_map[x][y+1];
 		}
 		//Mの向きを決めて行動決定に繋げる
@@ -373,13 +399,13 @@ void least_step_judgement_and_action_decision(void){
 //			if((y>0)&&((row[y-1]&(1<<x))==(1<<x))&&((column[x]&(1<<y))==(1<<y))){//前壁かつ左壁あればそれぞれにケツあて(hip_adjustment=1;90前進/180°旋回/遅く90後進/30前進//90°左旋回/遅く90後進/120前進)
 //				hip_adjustment=1;
 //			}
-		}else if((x<16)&&(MIN==Dist_map[x+1][y])){
+		}else if((x<15)&&(MIN==Dist_map[x+1][y])){
 			direction=2;//左向き
 //			if((y>0)&&(x>0)&&((row[y-1]&(1<<x))==(1<<x))&&((column[x-1]&(1<<y))==(1<<y))){//前壁かつ右壁あればそれぞれにケツあて(hip_adjustment=2;90前進/180°旋回/遅く90後進/30前進/90°右旋回/遅く90後進/120前進)
 //				hip_adjustment=2;
 //			}
 
-		}else if((y<16)&&(MIN==Dist_map[x][y+1])){
+		}else if((y<15)&&(MIN==Dist_map[x][y+1])){
 			direction=3;//後向き
 			if(((y>0)&&((row[y-1]&(1<<x))==(1<<x))&&((column[x]&(1<<y))==(1<<y)))||((y>0)&&(x>0)&&((row[y-1]&(1<<x))==(1<<x))&&((column[x-1]&(1<<y))==(1<<y)))){//(前壁かつ右壁)or(前壁かつ左壁)あればそれぞれにケツあて(hip_adjustment=3;90前進/180°旋回/遅く90後進/120前進)
 				hip_adjustment=3;
@@ -390,25 +416,25 @@ void least_step_judgement_and_action_decision(void){
 		//前後左右最も小さい歩数を決定
 		if(x>0){
 			MIN=Dist_map[x-1][y];
-		}else if(y<16){
+		}else if(y<15){
 			MIN=Dist_map[x][y+1];
 		}else{
 			MIN = 255;
 		}
 
-		if((y<16)&&(MIN>Dist_map[x][y+1])){
+		if((y<15)&&(MIN>Dist_map[x][y+1])){
 			MIN=Dist_map[x][y+1];
 			}
 		if((y>0)&&(MIN>Dist_map[x][y-1])){
 			MIN=Dist_map[x][y-1];
 		}
-		if((x<16)&&(MIN>Dist_map[x+1][y])){
+		if((x<15)&&(MIN>Dist_map[x+1][y])){
 			MIN=Dist_map[x+1][y];
 		}
 		//Mの向きを決めて行動決定に繋げる
 		if((x>0)&&(MIN==Dist_map[x-1][y])){
 			direction=0;//前向き
-		}else if((y<16)&&(MIN==Dist_map[x][y+1])){
+		}else if((y<15)&&(MIN==Dist_map[x][y+1])){
 			direction=1;//右向き
 //			if((x>0)&&(y>0)&&((column[x-1]&(1<<y))==(1<<y))&&((row[y-1]&(1<<x))==(1<<x))){//前壁かつ左壁あればそれぞれにケツあて(hip_adjustment=1;90前進/180°旋回/90後進/30前進/90°左旋回/90後進/120前進)
 //				hip_adjustment=1;
@@ -419,7 +445,7 @@ void least_step_judgement_and_action_decision(void){
 //				hip_adjustment=2;
 //			}
 
-		}else if((x<16)&&(MIN==Dist_map[x+1][y])){
+		}else if((x<15)&&(MIN==Dist_map[x+1][y])){
 			direction=3;//後向き
 			if(((x>0)&&(y>0)&&((column[x-1]&(1<<y))==(1<<y))&&((row[y-1]&(1<<x))==(1<<x)))||((x>0)&&(y>0)&&((column[x-1]&(1<<y))==(1<<y))&&((row[y+1]&(1<<x))==(1<<x)))){//(前壁かつ右壁)or(前壁かつ左壁)あればそれぞれにケツあて(hip_adjustment=3;90前進/180°旋回/90後進/120前進)
 				hip_adjustment=3;
@@ -1499,20 +1525,27 @@ void slalom_continual_ver_action_based_on_direction_decision_and_coordinate_upda
 	      //180 mm直進終了
 	if(direction==1){//右向き
 		if(hip_adjustment==0){//条件に合わない時普通に
+            ///////////////////////////
+//			////横壁制御
+//			if((float)g_sensor[1][0]>=WALLREAD_L){//左あり
+//				control_left_sensor = g_sensor[1][0];//オフセットを調整するためのもの
+//				offset_adjustment_len_rslalom =  ((37-0)/(901-595))*(control_left_sensor-595)+0 ;
+//				///右に曲がるとき, 左センサ(センサ値x)に対しては左向きを正として y = ((37-0)/(901-595))*(x-595)+0 　その後, yだけ左によっているので, yだけオフセットを増やす 両符号
+//				///R 0:599/30:485/60:275//74:178
+//				///左に曲がるとき, 右センサ(センサ値x)に対しては右向きを正として y = ((37-0)/(599-388.5))*(x-388.5)+0
+//			}else{
+//				offset_adjustment_len_rslalom = 0;
+//			}
+			/////////////////////////////
 
-			////横壁制御
-			if((float)g_sensor[1][0]>=WALLREAD_L){//左あり
-				control_left_sensor = g_sensor[1][0];//オフセットを調整するためのもの
-				offset_adjustment_len_rslalom =  ((37-0)/(901-595))*(control_left_sensor-595)+0 ;
-				///右に曲がるとき, 左センサ(センサ値x)に対しては左向きを正として y = ((37-0)/(901-595))*(x-595)+0 　その後, yだけ左によっているので, yだけオフセットを増やす 両符号
-				///R 0:599/30:485/60:275//74:178
-				///左に曲がるとき, 右センサ(センサ値x)に対しては右向きを正として y = ((37-0)/(599-388.5))*(x-388.5)+0
-			}else{
-				offset_adjustment_len_rslalom = 0;
-			}
-
-			slalom_trapezoid_accel_rturn(500,10000,100,460,80,91,75);//(500,10000,100,460,80,90); (500,17000,100,460,80,90);  (500,20000,100,460,80,90)
-			non_wall_control_trapezoid_accel_forward(2000,500,500,500,20 + offset_adjustment_len_rslalom);//横壁制御分入れた
+			offset_slalom_trapezoid_accel_rturn(500,10000,100,460,80,97,79);///これでいく(20mm全身で左に5度くらい傾いているからあえて回転角度を下げている感じになっている)r(500,10000,100,460,80,98,68);//r(500,10000,100,460,80,93,75)→; (500,17000,100,460,80,90);  (500,20000,100,460,80,90)
+//			offset_slalom_trapezoid_accel_rturn(500,10000,100,460,80,96,83);//基本t系にoffsetを調整できるやつで
+			non_wall_control_trapezoid_accel_forward(2000,500,500,500,38);//横壁制御なしver.
+			//
+//			slalom_trapezoid_accel_rturn(500,10000,100,460,80,91,75);//(500,10000,100,460,80,90); (500,17000,100,460,80,90);  (500,20000,100,460,80,90)
+//		    //////////////////////
+//			non_wall_control_trapezoid_accel_forward(2000,500,500,500,20 + offset_adjustment_len_rslalom);//横壁制御分入れた
+//			/////////////////////
 //			slalom_trapezoid_accel_rturn(500,17000,100,460,80,93);//(500,10000,100,460,80,90); (500,17000,100,460,80,90);  (500,20000,100,460,80,90)
 //			non_wall_control_trapezoid_accel_forward(2000,500,500,500,2);
 //			slalom_trapezoid_accel_rturn(350,15000,250,500,230,90);
@@ -1561,19 +1594,247 @@ void slalom_continual_ver_action_based_on_direction_decision_and_coordinate_upda
 
 		if(hip_adjustment==0){//条件に合わない時普通に
 
+//			/////////////////////////
+//			////横壁制御
+//				if((float)g_sensor[2][0]>=WALLREAD_R){//右あり
+//					control_right_sensor = g_sensor[2][0];//オフセットを調整するためのもの
+//					offset_adjustment_len_lslalom = ((37-0)/(599-388.5))*(control_right_sensor-388.5)+0 ;
+//					///右に曲がるとき, 左センサ(センサ値x)に対しては左向きを正として y = ((37-0)/(901-595))*(x-595)+0 　その後, yだけ左によっているので, yだけオフセットを増やす 両符号
+//					///R 0:599/30:485/60:275//74:178
+//					///左に曲がるとき, 右センサ(センサ値x)に対しては右向きを正として y = ((37-0)/(599-388.5))*(x-388.5)+0
+//				}else{
+//					offset_adjustment_len_lslalom = 0;
+//				}
+//			/////////////////////////
+			  offset_slalom_trapezoid_accel_lturn(500,10000,100,460,80,96.9,90.8);//2/17 20:16これでいく
+//		      offset_slalom_trapezoid_accel_lturn(500,10000,100,460,80,96,95);//これでいく
+//			  offset_slalom_trapezoid_accel_lturn(500,10000,100,460,80,91.5,108);//基本t系にoffsetを調整できるやつで
+//			  slalom_trapezoid_accel_lturn(500,10000,100,460,80,91,105);//(500,10000,100,460,80,90); (500,17000,100,460,80,90);  (500,20000,100,460,80,90)
+			  non_wall_control_trapezoid_accel_forward(2000,500,500,500,38);
+			  ////////横壁用の前進
+//			  non_wall_control_trapezoid_accel_forward(2000,500,500,500,20 + offset_adjustment_len_lslalom);
+//			 ////////////
+//			  slalom_trapezoid_accel_lturn(500,17000,100,460,80,93);//(500,10000,100,460,80,90); (500,17000,100,460,80,90);  (500,20000,100,460,80,90)
+//			  non_wall_control_trapezoid_accel_forward(2000,500,500,500,2);
+//			  slalom_trapezoid_accel_lturn(350,15000,250,500,230,90);
+//			  trapezoid_accel_forward(2000,500,500,100,20);//90む台形加速の関数(2000,500,500,100,20);
+//			  slalom_trapezoid_accel_lturn(300,10000,100,460,80,90);
+//			  trapezoid_accel_forward(2000,500,500,100,20);//90む台形加速の関数(2000,500,500,100,20);
+
+
+		}else if(hip_adjustment==2){
+//		  hip_drop();
+		}
+		  //座標更新
+		  if(z==0||z==4){//北に対して、、
+			  x=x-1;
+			  y=y;
+			  if(z==4){
+				  z=0;
+			  }
+		  }
+		  if(z==1){//東に対して、、
+			  x=x;
+			  y=y+1;
+		  }
+		  if(z==2){//南に対して、、
+			  x=x+1;
+			  y=y;
+		  }
+		  if(z==3||z==-1){//西に対して、、
+			  x=x;
+			  y=y-1;
+			  if(z==-1){
+				  z=3;
+			  }
+		  }
+		  //向き更新
+			  z=z-1;
+			  if(z==-1){
+				  z=3;
+			  }
+	}
+	if(direction==3){//後ろ向き
+	//90前進,180°左旋回,90前進,停止
+		if(hip_adjustment==0){//条件に合わない時普通に
+			  trapezoid_accel_forward(2000,500,500,100,70);//90む台形加速の関数
+			  motor_pwm_off();
+			  motor_pwm_on();
+			  trapezoid_accel_lturn(2000,100,400,80,180);//左180°曲がる
+			  motor_pwm_off();
+			  motor_pwm_on();
+			  trapezoid_accel_forward(2000,100,500,500,90);//90む台形加速の関数
+		}else if(hip_adjustment==3){
+		  hip_drop();
+		}
+		  //座標更新
+		  if(z==0||z==4){//北に対して、、
+			  x=x;
+			  y=y-1;
+			  if(z==4){
+				  z=0;
+			  }
+		  }
+		  if(z==1){//東に対して、、
+			  x=x-1;
+			  y=y;
+		  }
+		  if(z==2){//南に対して、、
+			  x=x;
+			  y=y+1;
+		  }
+		  if(z==3||z==-1){//西に対して、、
+			  x=x+1;
+			  y=y;
+			  if(z==-1){
+				  z=3;
+			  }
+		  }
+		  //向き更新
+			  z=z-2;
+			  if(z==-1){
+				  z=3;
+			  }else if(z==-2){
+				  z=2;
+		  }
+
+
+}//終わり
+}
+
+//横壁制御を入れたスラローム付き連続足立法の判断後の行動
+void side_add_slalom_continual_ver_action_based_on_direction_decision_and_coordinate_update(void){
+	float control_left_sensor;
+	float control_right_sensor;
+	float offset_adjustment_len_rslalom;
+	float offset_adjustment_len_lslalom;
+
+	//(最小歩数判別→行動決定(least_step_judgement_and_action_decision(void)))→<動作>
+	if(direction==0){//前向き
+		//160 mm直進,停止
+		  trapezoid_accel_forward(2000,500,500,500,160);
+//		  wall_cut_detection_trapezoid_accel_forward(2000,500,500,500,160);//壁切れ補正を入れた壁制御
+		  //座標更新
+		  if(z==0||z==4){//北に対して、、
+			  x=x;
+			  y=y+1;
+			  if(z==4){
+				  z=0;
+			  }
+		  }
+		  if(z==1){//東に対して、、
+			  x=x+1;
+			  y=y;
+		  }
+		  if(z==2){//南に対して、、
+			  x=x;
+			  y=y-1;
+		  }
+		  if(z==3||z==-1){//西に対して、、
+			  x=x-1;
+			  y=y;
+			  if(z==-1){
+				  z=3;
+			  }
+		  }
+		  //向き更新
+			  z=z;
+		  }
+	      //180 mm直進終了
+	if(direction==1){//右向き
+		if(hip_adjustment==0){//条件に合わない時普通に
+            /////////////////////////
+			////横壁制御
+			if((float)g_sensor[1][0]>=WALLREAD_L){//左あり
+				control_left_sensor = g_sensor[1][0];//オフセットを調整するためのもの
+				//↓左センサーをもとに後ろオフセットを調整
+				offset_adjustment_len_lslalom =  -1*(0.000001)*pow(control_left_sensor,3)+0.0022*pow(control_left_sensor,2)-1.3589*control_left_sensor+309.07 + 37 ;
+//				offset_adjustment_len_rslalom =  ((37-0)/(901-595))*(control_left_sensor-595)+0 ;
+				///右に曲がるとき, 左センサ(センサ値x)に対しては左向きを正として y = ((37-0)/(901-595))*(x-595)+0 　その後, yだけ左によっているので, yだけオフセットを増やす 両符号
+				///R 0:599/30:485/60:275//74:178
+				///左に曲がるとき, 右センサ(センサ値x)に対しては右向きを正として y = ((37-0)/(599-388.5))*(x-388.5)+0
+			}else{
+				offset_adjustment_len_lslalom = 0;
+			}
+			/////////////////////////////
+
+			offset_slalom_trapezoid_accel_rturn(500,10000,100,460,80,97,79);///これでいく(20mm全身で左に5度くらい傾いているからあえて回転角度を下げている感じになっている)r(500,10000,100,460,80,98,68);//r(500,10000,100,460,80,93,75)→; (500,17000,100,460,80,90);  (500,20000,100,460,80,90)
+//			offset_slalom_trapezoid_accel_rturn(500,10000,100,460,80,96,83);//基本t系にoffsetを調整できるやつで
+			non_wall_control_trapezoid_accel_forward(2000,500,500,500,38 + offset_adjustment_len_lslalom);//横壁制御なしver.
+			//
+//			slalom_trapezoid_accel_rturn(500,10000,100,460,80,91,75);//(500,10000,100,460,80,90); (500,17000,100,460,80,90);  (500,20000,100,460,80,90)
+//		    //////////////////////
+//			non_wall_control_trapezoid_accel_forward(2000,500,500,500,20 + offset_adjustment_len_rslalom);//横壁制御分入れた
+//			/////////////////////
+//			slalom_trapezoid_accel_rturn(500,17000,100,460,80,93);//(500,10000,100,460,80,90); (500,17000,100,460,80,90);  (500,20000,100,460,80,90)
+//			non_wall_control_trapezoid_accel_forward(2000,500,500,500,2);
+//			slalom_trapezoid_accel_rturn(350,15000,250,500,230,90);
+////			step_ver_trapezoid_accel_forward(2000,500,500,100,20);
+//			trapezoid_accel_forward(2000,500,500,100,20);//90む台形加速の関数(2000,500,500,100,20);
+//			slalom_trapezoid_accel_rturn(300,10000,100,460,80,90);
+//			trapezoid_accel_forward(2000,500,500,100,20);//90む台形加速の関数(2000,500,500,100,20);
+
+		}else if(hip_adjustment==1){
+//		  hip_drop();
+		}
+
+		  //座標更新
+		  if(z==0||z==4){//北に対して、、
+			  x=x+1;
+			  y=y;
+			  if(z==4){
+				  z=0;
+			  }
+		  }
+		  if(z==1){//東に対して、、
+			  x=x;
+			  y=y-1;
+		  }
+		  if(z==2){//南に対して、、
+			  x=x-1;
+			  y=y;
+		  }
+		  if(z==3||z==-1){//西に対して、、
+			  x=x;
+			  y=y+1;
+			  if(z==-1){
+				  z=3;
+			  }
+		  }
+		  //向き更新
+			  z=z+1;
+			  if(z==4){
+				  z=0;
+			  }
+
+
+	}
+	if(direction==2){//左向き
+		  //90 mm直進,90°左旋回,90 mm直進,停止
+
+		if(hip_adjustment==0){//条件に合わない時普通に
+
+//			/////////////////////////
 			////横壁制御
 				if((float)g_sensor[2][0]>=WALLREAD_R){//右あり
 					control_right_sensor = g_sensor[2][0];//オフセットを調整するためのもの
-					offset_adjustment_len_lslalom = ((37-0)/(599-388.5))*(control_right_sensor-388.5)+0 ;
+					offset_adjustment_len_rslalom =  -7*(0.000001)*pow(control_left_sensor,3)+0.0068*pow(control_left_sensor,2)-2.4156*control_left_sensor+321.2 + 37 ;
 					///右に曲がるとき, 左センサ(センサ値x)に対しては左向きを正として y = ((37-0)/(901-595))*(x-595)+0 　その後, yだけ左によっているので, yだけオフセットを増やす 両符号
 					///R 0:599/30:485/60:275//74:178
 					///左に曲がるとき, 右センサ(センサ値x)に対しては右向きを正として y = ((37-0)/(599-388.5))*(x-388.5)+0
 				}else{
-					offset_adjustment_len_lslalom = 0;
+					offset_adjustment_len_rslalom= 0;
 				}
-
-			  slalom_trapezoid_accel_lturn(500,10000,100,460,80,91,105);//(500,10000,100,460,80,90); (500,17000,100,460,80,90);  (500,20000,100,460,80,90)
-			  non_wall_control_trapezoid_accel_forward(2000,500,500,500,20 + offset_adjustment_len_lslalom);
+//			/////////////////////////
+			  offset_slalom_trapezoid_accel_lturn(500,10000,100,460,80,96.9,90.8);//2/17 20:16これでいく
+//		      offset_slalom_trapezoid_accel_lturn(500,10000,100,460,80,96,95);//これでいく
+//			  offset_slalom_trapezoid_accel_lturn(500,10000,100,460,80,91.5,108);//基本t系にoffsetを調整できるやつで
+//			  slalom_trapezoid_accel_lturn(500,10000,100,460,80,91,105);//(500,10000,100,460,80,90); (500,17000,100,460,80,90);  (500,20000,100,460,80,90)
+			  ////////横壁用の前進
+			  non_wall_control_trapezoid_accel_forward(2000,500,500,500,38 + offset_adjustment_len_rslalom);
+			  ////////横壁用の前進
+//			  non_wall_control_trapezoid_accel_forward(2000,500,500,500,20 + offset_adjustment_len_lslalom);
+//			 ////////////
 //			  slalom_trapezoid_accel_lturn(500,17000,100,460,80,93);//(500,10000,100,460,80,90); (500,17000,100,460,80,90);  (500,20000,100,460,80,90)
 //			  non_wall_control_trapezoid_accel_forward(2000,500,500,500,2);
 //			  slalom_trapezoid_accel_lturn(350,15000,250,500,230,90);
@@ -4106,9 +4367,15 @@ void continual_adachi_method(void){
 
       wall_information_initialize();//壁情報の初期化
 	  //初期動作
-      motor_excitation_on();//励磁スタート
-      motor_pwm_on();
-	  trapezoid_accel_forward(2000,100,500,500,90);//90進む台形加速の関数
+      motor_excitation_on();
+	  motor_pwm_on();
+	  trapezoid_accel_backward(600,100,200,100,80);//90back台形加速の関数遅くね
+	  HAL_Delay(500);//
+	  motor_pwm_off();
+	  motor_pwm_on();
+	  trapezoid_accel_forward(2000,100,500,500,120);//120む台形加速の関数
+
+      /////
 	  x=x;
 	  y=y+1;
 	  z=z;//　最初(0,1)から出発、(この時、(0,0.5)あたりにいるが一旦(0,1)にいたとみなす)北向き
@@ -4195,6 +4462,8 @@ void slalom_continual_adachi_method(void){
 	  z=0;
 	  column[0]=0b1000000000000000;
 	  row[0]=0b0000000000000000;
+//	  column[15]=0b1111111111111111;
+//	  row[15]=0b1111111111111111;
 
       wall_information_initialize();//壁情報の初期化
 	  //初期動作
@@ -4285,4 +4554,109 @@ void slalom_continual_adachi_method(void){
 		}
 }
 
+void side_added_slalom_continual_adachi_method(void){
+	//
+//	//歩数マップの初期化これは足立法の繰り返しでは入れてはいけないきがす、、
+//	for(x=0;x<=15;x++){
+//		for(y=0;y<=15;y++){
+//			Dist_map[x][y]=255;
+//		}
+//	}
 
+	  //初期化 最初初期化の次に歩数マップの初期化をしていたために最初のx,y,zが16,16,0担ってたこれは終わらんわ
+	  x=0;
+	  y=0;
+	  z=0;
+	  column[0]=0b1000000000000000;
+	  row[0]=0b0000000000000000;
+//	  column[15]=0b1111111111111111;
+//	  row[15]=0b1111111111111111;
+
+      wall_information_initialize();//壁情報の初期化
+	  //初期動作
+      motor_excitation_on();
+	  motor_pwm_on();
+	  trapezoid_accel_backward(600,100,200,100,80);//90back台形加速の関数遅くね
+	  HAL_Delay(500);//
+	  motor_pwm_off();
+	  motor_pwm_on();
+	  trapezoid_accel_forward(2000,100,500,500,120);//120む台形加速の関数
+
+
+//      motor_excitation_on();//励磁スタート
+//      motor_pwm_on();
+//      trapezoid_accel_backward(1000,100,300,100,80);//90back台形加速の関数遅くね
+//	  motor_pwm_off();
+//	  motor_pwm_on();
+//      trapezoid_accel_forward(2000,100,500,500,120);//120む台形加速の関数
+//	  trapezoid_accel_forward(2000,100,500,500,90);//90進む台形加速の関数
+	  x=x;
+	  y=y+1;
+	  z=z;//　最初(0,1)から出発、(この時、(0,0.5)あたりにいるが一旦(0,1)にいたとみなす)北向き
+
+//	  //
+//	  	//歩数マップの初期化これは足立法の繰り返しでは入れてはいけないきがす、、
+//	  	for(x=0;x<=15;x++){
+//	  		for(y=0;y<=15;y++){
+//	  			Dist_map[x][y]=255;
+//	  		}
+//	  	}
+
+	  	//wall_information_initialize();
+
+	  //片方のボタンを押したら終了
+		while(1){
+
+
+
+			if ((HAL_GPIO_ReadPin(SWITCH_1_GPIO_Port,SWITCH_1_Pin)==0)||(HAL_GPIO_ReadPin(SWITCH_2_GPIO_Port,SWITCH_2_Pin)==0)){
+				//物理的に止まる関数
+				ring_interrupt();
+				motor_pwm_off();
+				HAL_Delay(1000);//1秒経ってから励磁解除
+				motor_excitation_off();//励磁ストップ;
+				break;
+			}else{
+//			}else{
+//			printf("プログラムの初めx=%d,y=%d,z=%d\n\r",x,y,z);
+			//終了判定
+			if((x==goal_x)&&(y==goal_y)){//ゴールに来たら終了
+					trapezoid_accel_forward(2000,500,500,100,90);//90む台形加速の関数
+					motor_pwm_off();
+					HAL_Delay(1000);//1秒経ってから励磁解除
+					motor_excitation_off();//励磁ストップ
+					break;//無限ループから脱出
+			}
+
+
+		   //<壁情報更新>1223のプログラムでは例外処理をそれぞれ書いていたが、ここでは一旦、各方角の外壁の例外処理をしている
+		     //今(x,y,z)
+
+
+
+		     //方角によってどう変わるか//z=0,1,2,3
+			  //例外処理(位置によって場合分け)
+
+	 //関数化した一番外側にいるときの壁情報の処理, 加えて, 区画の境界にいるときに壁情報の取得諸々
+			wall_sensor();
+
+//			Print_Wall_2();
+			//20mm進んでいる間に歩数マップ作成する関数
+			before_step_number_revised();
+			step_ver_trapezoid_accel_forward(2000,500,500,500,20);
+//			step_number_revised();
+			after_step_number_revised();
+//			printf("歩数マップ作成時x=%d,y=%d,z=%d\n\r",x,y,z);
+//			Print_Wall_2();
+
+			//最小歩数判定//行動決定
+			least_step_judgement_and_action_decision();
+//			printf("最初歩数判定、行動決定時x=%d,y=%d,z=%d\n\r",x,y,z);
+
+			//行動&座標更新
+			side_add_slalom_continual_ver_action_based_on_direction_decision_and_coordinate_update();
+//			printf("行動後、座標更新時x=%d,y=%d,z=%d\n\r",x,y,z);
+//			}
+		}
+		}
+}

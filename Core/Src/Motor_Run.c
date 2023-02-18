@@ -248,7 +248,7 @@ void step_ver_trapezoid_accel_forward(float a0,float v0,float vM,float vE,float 
 	   left_dis=target_dis;
 	   vel =v_start;
 	   //壁制御オン(1)
-	   wall_control_flg=1;
+//	   wall_control_flg=1;
 
 	   //前壁に近過ぎたら壁制御を切るやつ
 	   near_wall_cutting_flg=1;
@@ -870,6 +870,121 @@ void slalom_trapezoid_accel_lturn(float center_of_gravity_vel,float angle_a,floa
 //		while(angle_vel>angle_v_end){
 //			//printf("%f\n\r",angle);
 //		}
+		angle_acc=0;
+//		trapezoid_angle_flg=0;
+		slalom_trapezoid_flg=0;
+
+		//壁制御用のflgをオフ(0)にする
+		wall_control_flg=0;
+}
+
+void offset_slalom_trapezoid_accel_lturn(float center_of_gravity_vel,float angle_a,float angle_v0,float angle_vM,float angle_vE,float angle_t, float tx){//重心速度 ,角加速度,初角速,最大角速度,終端角速度,設定角度
+	   float a0=2000;
+       float v0=center_of_gravity_vel;
+       float vM=center_of_gravity_vel;
+       float vE=center_of_gravity_vel;
+//       float tx=105;
+	   //初期化スラロームver.
+	   accm=a0;//externする用
+	   acc=a0;//加速度の定義
+	   v_start=v0;//初速定義
+	   v_max=vM;//最高速度定義
+	   v_end=vE;//終端速度定義
+	   target_dis=tx;//目標
+	   dt=0.001;//刻み時間
+	   dis=0;
+	   left_dis=target_dis;
+	   vel =v_start;
+	   //壁制御オン(1)//一回なしで
+//	   wall_control_flg=1;
+
+//	   //以下角速度系初期化
+//	   angle_acc=1000;//角加速度の定義//ここの調整がなかなか　回転はすぐしたいから傾き大きめで良さげ//三角角加速の方がいいかも
+//	   angle_v_start=100;//初角速度定義
+//	   angle_v_max=400;//最高角速度定義//(400^2-100^2)/(2*2000)=500*300/(2*2000)=15*10^4/4000=37.5°で加角速
+//	   angle_v_end=80;//終端角速度定義 //(400^2-80^2)/(2*2000)=480*320/(2*2000)=120*2^5/1000=2^7*30/1000=3.840°で減角速
+//	   target_angle=180;//目標 180°
+//	   dt=0.001;//刻み時間
+//	   angle=0;//変数としての角度
+//	   angle_vel =10;//変数としての角速度
+
+	   angle_acc=angle_a;//角加速度の定義//ここの調整がなかなか　回転はすぐしたいから傾き大きめで良さげ//三角角加速の方がいいかも
+	   angle_v_start=angle_v0;//初角速度定義
+	   angle_v_max=angle_vM;//最高角速度定義//(400^2-100^2)/(2*2000)=500*300/(2*2000)=15*10^4/4000=37.5°で加角速
+	   angle_v_end=angle_vE;//終端角速度定義 //(400^2-80^2)/(2*2000)=480*320/(2*2000)=120*2^5/1000=2^7*30/1000=3.840°で減角速
+	   target_angle=angle_t;//目標 180°
+	   dt=0.001;//刻み時間
+	   angle=0;//変数としての角度
+	   angle_vel =angle_v_start;//変数としての角速度
+
+	   wall_control_flg=0;//壁制御 多分ここでは不要　超信地旋回(スラロームも)の時は一旦壁制御切っても良いのでは
+
+		slalom_trapezoid_flg=1;
+
+		angle_dec = (angle_v_max*angle_v_max-angle_v_end*angle_v_end)/(2*angle_acc);
+
+		while(((vel < v_max)&&(left_dis>x_dec))){
+
+							//			printf("vel=%f,left_dis=%f,x_dec=%f,v_end=%f,accm=%f\n\r",vel,left_dis,x_dec,v_end,accm);
+		//			while(fabs(angle_vel) < fabs(angle_v_max)){//直進速度は一定なので、台形加速の加速、減速条件は抜けよ
+		//					//			printf("vel=%f,left_dis=%f,x_dec=%f,v_end=%f,accm=%f\n\r",vel,left_dis,x_dec,v_end,accm);
+		//			}
+									}if(vel > v_max){
+										vel=vM;
+
+									}
+									acc=0;
+									while(angle_vel < angle_v_max){//直進速度は一定なので、台形加速の加速、減速条件は抜けよ
+											//			printf("vel=%f,left_dis=%f,x_dec=%f,v_end=%f,accm=%f\n\r",vel,left_dis,x_dec,v_end,accm);
+
+									}
+
+		//		while(angle_vel < angle_v_max){
+		//			//printf("%f\n\r",angle);
+		//		}
+
+				//
+
+				//
+		//		if(vel > v_max){
+		//					vel=vM;
+		//				}
+		//				acc=0;
+
+				angle_acc=0;
+
+				while(target_angle-angle > angle_dec){
+
+				}angle_acc=-angle_a;
+				while(left_dis>x_dec){//
+							//printf("%f\n\r",vel);
+				//			printf("vel=%f,left_dis=%f,x_dec=%f,v_end=%f,accm=%f\n\r",vel,left_dis,x_dec,v_end,accm);
+		//			while(left_dis>x_dec){//
+										//printf("%f\n\r",vel);
+							//			printf("vel=%f,left_dis=%f,x_dec=%f,v_end=%f,accm=%f\n\r",vel,left_dis,x_dec,v_end,accm);
+		//							}
+
+						}
+
+						acc=-a0;
+
+		//		while(target_angle-angle > angle_dec){
+		//			//printf("%f\n\r",angle);
+		//		}
+				while((angle_vel>angle_v_end)&&(vel>v_end)){
+									//printf("%f\n\r",vel);
+						//			printf("vel=%f,left_dis=%f,x_dec=%f,v_end=%f,accm=%f\n\r",vel,left_dis,x_dec,v_end,accm);
+				}
+		//			while(fabs(angle_vel)>fabs(angle_v_end)){
+							//printf("%f\n\r",vel);
+				//			printf("vel=%f,left_dis=%f,x_dec=%f,v_end=%f,accm=%f\n\r",vel,left_dis,x_dec,v_end,accm);
+
+					//					//printf("%f\n\r",vel);
+					//		//			printf("vel=%f,left_dis=%f,x_dec=%f,v_end=%f,accm=%f\n\r",vel,left_dis,x_dec,v_end,accm);
+		//				}
+
+				acc=0;
+
 		angle_acc=0;
 //		trapezoid_angle_flg=0;
 		slalom_trapezoid_flg=0;

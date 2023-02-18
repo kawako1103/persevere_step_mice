@@ -101,47 +101,101 @@ void mode_setting(){
 	HAL_Delay(1000);
 // if ((HAL_GPIO_ReadPin(SWITCH_1_GPIO_Port,SWITCH_1_Pin)==0)||(HAL_GPIO_ReadPin(SWITCH_2_GPIO_Port,SWITCH_2_Pin)==0)){//SW1もしくはSW2を押したら設定画面へ
 	 while(1){//設定画面 初期設定はスラローム探索速度500
+		 pl_lcd_clear();
+		 pl_timer_init();
+		 pl_lcd_puts("ex_slalom");
+		 HAL_Delay(500);
+		 pl_lcd_clear();
 //		 HAL_Delay(1000);
-		 //SW1を押したら他の選択肢(探索スラローム単体か　最短走行のスラロームか、、)
+		 //SW1を押したら他の選択肢(横壁制御ありのスラロームか　超信地旋回の足立法か　最短走行のスラロームか、、)
 		 if(HAL_GPIO_ReadPin(SWITCH_1_GPIO_Port,SWITCH_1_Pin)==0){
-			 ring_step();
-			 HAL_Delay(500);
-			 while(1){
-				 //SW2だけ押されたら連続足立法
-				 if ((HAL_GPIO_ReadPin(SWITCH_2_GPIO_Port,SWITCH_2_Pin)==0)&&(HAL_GPIO_ReadPin(SWITCH_1_GPIO_Port,SWITCH_1_Pin)!=0)){
-					 warming_up();
+		  ring_step();
+		  HAL_Delay(500);
+			while(1){
 
-
-					 while(1){
-						 if (HAL_GPIO_ReadPin(SWITCH_2_GPIO_Port,SWITCH_2_Pin)==0){
-					 			HAL_Delay(500);
-								 pl_lcd_clear();
-								 pl_timer_init();
-								 ring_start();
-								 pl_lcd_puts("exploring...");//
-								 pl_lcd_pos(1,0);
-					 			continual_adachi_method();//連続足立法
-								 pl_lcd_clear();
-								 pl_timer_init();
-								 pl_lcd_puts("End");//
-								 ring_end();
-								 pl_lcd_pos(1,0);
-					 			break;
-					 			}
-					 }
-					 //TBD
-				 //SW1押されたらもどる
-				 }else if ((HAL_GPIO_ReadPin(SWITCH_1_GPIO_Port,SWITCH_1_Pin)==0)&&(HAL_GPIO_ReadPin(SWITCH_2_GPIO_Port,SWITCH_2_Pin)!=0)){
-					 ring_step();
-					 break;
-				 }
 			 pl_lcd_clear();
 			 pl_timer_init();
-			 pl_lcd_puts("ex_superstrike");//超信地旋回する連続足立法(連続ではない足立法は一旦なしで)
+			 pl_lcd_puts("side_added_adachi");//横壁制御あり連続足立法(連続ではない足立法は一旦なしで)
 			 pl_lcd_pos(1,0);
 			 pl_lcd_puts(" 500");
 			 HAL_Delay(500);
+			 HAL_Delay(500);
+
+				 //SW2だけ押されたら横壁制御つき　連続足立法
+				 if ((HAL_GPIO_ReadPin(SWITCH_2_GPIO_Port,SWITCH_2_Pin)==0)&&(HAL_GPIO_ReadPin(SWITCH_1_GPIO_Port,SWITCH_1_Pin)!=0)){
+					 warming_up();
+
+							while(1){
+								if (HAL_GPIO_ReadPin(SWITCH_2_GPIO_Port,SWITCH_2_Pin)==0){
+									HAL_Delay(500);
+									 pl_lcd_clear();
+									 pl_timer_init();
+									 ring_start();
+									 pl_lcd_puts("exploring...");//
+									 pl_lcd_pos(1,0);
+									side_added_slalom_continual_adachi_method();
+									 pl_lcd_clear();
+									 pl_timer_init();
+									 pl_lcd_puts("End");//
+									 ring_end();
+									 pl_lcd_pos(1,0);
+
+									goto shortestfunc;
+								}
+							}
+					 //TBD
+				 //SW1押されたら連続足立法か？
+				 }else if ((HAL_GPIO_ReadPin(SWITCH_1_GPIO_Port,SWITCH_1_Pin)==0)&&(HAL_GPIO_ReadPin(SWITCH_2_GPIO_Port,SWITCH_2_Pin)!=0)){
+					 ring_step();
+					 HAL_Delay(500);
+					 while(1){
+
+					 pl_lcd_clear();
+					 pl_timer_init();
+					 pl_lcd_puts("ex_superstrike");//超信地旋回する連続足立法(連続ではない足立法は一旦なしで)
+					 pl_lcd_pos(1,0);
+					 pl_lcd_puts(" 500");
+					 HAL_Delay(500);
+
+						 if (HAL_GPIO_ReadPin(SWITCH_2_GPIO_Port,SWITCH_2_Pin)==0){
+							 	warming_up();
+
+							 	///
+							 	while(1){
+									if (HAL_GPIO_ReadPin(SWITCH_2_GPIO_Port,SWITCH_2_Pin)==0){
+										HAL_Delay(500);
+										 pl_lcd_clear();
+										 pl_timer_init();
+										 ring_start();
+										 pl_lcd_puts("exploring...");//
+										 pl_lcd_pos(1,0);
+										 continual_adachi_method();//連続足立法
+										 pl_lcd_clear();
+										 pl_timer_init();
+										 pl_lcd_puts("End");//
+										 ring_end();
+										 pl_lcd_pos(1,0);
+										 goto shortestfunc;
+									}else if((HAL_GPIO_ReadPin(SWITCH_1_GPIO_Port,SWITCH_1_Pin)==0)&&(HAL_GPIO_ReadPin(SWITCH_2_GPIO_Port,SWITCH_2_Pin)!=0)){
+										break;
+									}
+								}break;
+							}else if((HAL_GPIO_ReadPin(SWITCH_1_GPIO_Port,SWITCH_1_Pin)==0)&&(HAL_GPIO_ReadPin(SWITCH_2_GPIO_Port,SWITCH_2_Pin)!=0)){
+								break;
+							}
+
+						}
+					 break;
+
+					 }
+				 	 if((HAL_GPIO_ReadPin(SWITCH_1_GPIO_Port,SWITCH_1_Pin)==0)&&(HAL_GPIO_ReadPin(SWITCH_2_GPIO_Port,SWITCH_2_Pin)!=0)){//1ボタンを押したらもどる
+//					 if ((HAL_GPIO_ReadPin(SWITCH_1_GPIO_Port,SWITCH_1_Pin)==0)&&(HAL_GPIO_ReadPin(SWITCH_2_GPIO_Port,SWITCH_2_Pin)==0)){//ボタンを両方押したらもどる
+						 ring_step();
+						 HAL_Delay(500);
+						 break;
+					 }
 			 }
+
 
 
 		 }//SW2を押したら決定で探索開始(探索スラローム単体か　最短走行のスラロームか、、)
@@ -194,7 +248,12 @@ void mode_setting(){
 					 }
 					 }
 
+
+
+
+			 //探索終了後
 			 //終了したら
+			 shortestfunc://横壁制御用と超信地旋回用のやつの探索後にくる
 			 while(1){
 			////////壁情報を消す場合は電源を消してね
 			////////
@@ -226,15 +285,15 @@ void mode_setting(){
 			 }else if (HAL_GPIO_ReadPin(SWITCH_2_GPIO_Port,SWITCH_2_Pin)==0){
 //				 /////
 //				 /////探索済の壁を塞ぐやつ
-//				 buried_Print_Wall();
+				 buried_Print_Wall();
 
-				 Print_Wall_2();
-				 ring_step();
-				 before_start_count();
-
-				 pl_lcd_puts("Go!!!!");//最短走行速度500()
-				 pl_lcd_pos(1,0);
-				 pl_lcd_puts("500");
+//				 Print_Wall_2();
+//				 ring_step();
+//				 before_start_count();
+//
+//				 pl_lcd_puts("Go!!!!");//最短走行速度500()
+//				 pl_lcd_pos(1,0);
+//				 pl_lcd_puts("500");
 
 				 //////最短走行テスト用
 //				 imaginary_run_and_pass_determination();
@@ -344,11 +403,6 @@ void mode_setting(){
 		 ///////
 		 //////
 		 /////
-		 pl_lcd_clear();
-		 pl_timer_init();
-		 pl_lcd_puts("ex_slalom");
-	     HAL_Delay(500);
-	     pl_lcd_clear();
 
 //	 			if (HAL_GPIO_ReadPin(SWITCH_2_GPIO_Port,SWITCH_2_Pin)==0){
 //	 				break;

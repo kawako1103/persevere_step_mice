@@ -27,11 +27,13 @@ void least_step_judgement_and_action_decision();
 void action_based_on_direction_decision_and_coordinate_update();
 void continual_ver_action_based_on_direction_decision_and_coordinate_update();
 void slalom_continual_ver_action_based_on_direction_decision_and_coordinate_update();
+void side_add_slalom_continual_ver_action_based_on_direction_decision_and_coordinate_update();
 void wall_sensor();
 void short_ver_wall_sensor();
 void adachi_method();
 void continual_adachi_method();
 void slalom_continual_adachi_method();
+void side_added_slalom_continual_adachi_method();
 
 extern int column[16];
 extern int row[16];
