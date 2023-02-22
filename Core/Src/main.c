@@ -662,8 +662,8 @@ int main(void)
 //	  //閾値とかはここでセンサー//sensor test
 	  		 //HAL_ADC_Start_DMA(&hadc1, g_ADCBuffer,sizeof(g_ADCBuffer) / sizeof(uint16_t));
 //	  		 printf("BATT=%f\n\r",g_V_batt);
-//	  		 printf("SEN1=%d,SEN2=%d,SEN3=%d,SEN4=%d\n\r", g_sensor[0][0],g_sensor[1][0],g_sensor[2][0],g_sensor[3][0]);
-//	  		 wait_ms(500);
+	  		 printf("SEN1=%d,SEN2=%d,SEN3=%d,SEN4=%d\n\r", g_sensor[0][0],g_sensor[1][0],g_sensor[2][0],g_sensor[3][0]);
+	  		 wait_ms(500);
 
 
 

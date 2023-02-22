@@ -816,7 +816,7 @@ void shortest_run_action_based_on_direction_decision_and_coordinate_update(float
 
 void shortest_run(float v){
 
-	  HAL_Delay(5000);
+//	  HAL_Delay(100);
 	  //初期動作
       motor_excitation_on();
 	  motor_pwm_on();
@@ -834,7 +834,16 @@ void shortest_run(float v){
 ///
 
 	  for(n=0;n<=nmax;n++){
-		   shortest_run_action_based_on_direction_decision_and_coordinate_update(v);
+		  if ((HAL_GPIO_ReadPin(SWITCH_1_GPIO_Port,SWITCH_1_Pin)==0)||(HAL_GPIO_ReadPin(SWITCH_2_GPIO_Port,SWITCH_2_Pin)==0)){
+		  				//物理的に止まる関数
+		  				ring_interrupt();
+		  				motor_pwm_off();
+		  				HAL_Delay(1000);//1秒経ってから励磁解除
+		  				motor_excitation_off();//励磁ストップ;
+		  				return 0;//breakだとfor文を抜けた後に90 90前進が残ってしまう のでshortest_runだけを終わらしてかな　endだと多分次最短走行やるっていうのができなくなるかな
+		  			}else{
+		  				shortest_run_action_based_on_direction_decision_and_coordinate_update(v);
+		  			}
 	  }
 	  //最後180進ませることに
 	  trapezoid_accel_forward(2000,v,v,v,90);//90む台形加速の関数

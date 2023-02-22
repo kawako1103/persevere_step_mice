@@ -36,7 +36,7 @@ int Left_wall;
 int hip_adjustment=0;
 
 //ゴール座標をここに入力
-int goal_x=7;
+int goal_x=8;
 int goal_y=7;
 int count;
 int MIN;
@@ -246,6 +246,7 @@ void hip_drop(void){
 
 			non_wall_control_trapezoid_accel_forward(2000,100,300,100,30);//ここで中心にこれているか　左右で傾いていないか
 			motor_pwm_off();
+//			HAL_Delay(500);
 			motor_pwm_on();
 			trapezoid_accel_lturn(2000,100,400,80,90);//90°曲がる
 			motor_pwm_off();
