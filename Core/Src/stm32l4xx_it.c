@@ -236,7 +236,7 @@ void TIM1_UP_TIM16_IRQHandler(void)
 //  g_motorCount_l = calPWMCount(vel);
   __HAL_TIM_SET_AUTORELOAD(&htim1,(uint16_t)(g_motorCount_l));//PWM周期のことだと解釈
   __HAL_TIM_SET_COMPARE(&htim1,TIM_CHANNEL_1,(uint16_t)(g_motorCount_l/2));//PWM周期の代入で入れた
-  __HAL_TIM_SET_COUNTER(&htim1,0);//マニュアルでhtim1
+  __HAL_TIM_SET_COUNTER(&htim1,0);//マニュアルではhtim1とあるがだぶんhtim2で良さげ
 //  //ログをとる割り込み処理のTIM1
 //   log_vel_interupt();
   /* USER CODE END TIM1_UP_TIM16_IRQn 1 */
@@ -278,16 +278,14 @@ void TIM6_DAC_IRQHandler(void)
   pl_timer_count();
   pl_interupt_getSensor();
   calWallControl();
-////台形加速のTIM6割り込み処理
+  //台形加速のTIM6割り込み処理
   trapezoid_acc_interupt();
   //超信地旋回のTIM6割り込み処理;
   trapezoid_angle_acc_interupt();
-  //スラロームのTIM6割り込み処理;
-  slalom_trapezoid_acc_interupt();
   //ログをとる割り込み処理のTIM6 TIM6は遅く, TIM2が高速なのでここでログとる
   log_vel_interupt();
-  //壁制御のTIM6割り込み処理使っても動かないっす
-  //wall_control_interupt();
+  //壁制御のTIM6割り込み処理
+//  wall_control_interupt();
   //
   /* USER CODE END TIM6_DAC_IRQn 1 */
 }
