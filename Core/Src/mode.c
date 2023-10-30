@@ -299,7 +299,7 @@ void mode_setting(){
 //				 /////探索済の壁を塞ぐやつ
 				 buried_Print_Wall();
 
-//				 Print_Wall_2();
+				 Print_Wall_2();
 //				 ring_step();
 //				 before_start_count();
 //

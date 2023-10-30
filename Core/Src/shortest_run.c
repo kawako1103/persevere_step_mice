@@ -381,7 +381,27 @@ int nmax;
 //
 ///////////////////////
 
-void short_least_step_judgement_and_action_decision(){
+void short_least_step_judgement_and_action_decision(){//直進のpass圧縮を仕込んだ
+//1030追記 セットを作る
+	//スラローム前にpass繰り x + slalom/
+	//前回がslalom(pass[n]<0)なら直進前にpass繰り x + trapezoid/
+	//前回が直進なら(pass[n]>0)なら直進前pass繰りなし - + trapezoid/
+
+
+//方針としては、余計にコピペをせずに済むように一箇所で直進の時とスラロームの時を振り分ける。直進を優先させてあげて、とにかく曲がる場合を取り除くこと//前回のpass、以下のMINに応じてpassに入れ込む時の二つ場合で
+
+	//前回のpassが正(直進)なら一旦rに保存してpassに0を代入、後から正になったらrを加え、負だったら、次のpass[n＋1]にそれを入れて、一旦rをpass[n]に入れて、負だった値を
+	//負(前回スラローム)なら次のpassに変える、
+	//それ以外はまだ何もされていない空のpassと考えて0を代入
+
+//	if(pass[n]>0){
+//		int r = pass[n];//rは前入れたpassが正だった時にそれを一旦保管しておく
+//		pass[n] = 0;
+//	}else if(pass[n]<0){
+//		n = n+1;//前のpassが次のnに
+//	}else{//passが代入されていない場合、passに０入れとく
+//		pass[n] = 0;//
+//	};
 
 //direction == 0;
 if(z==0||z==4){//(x,y),北に対して、//前Dist_map[x][y+1]→右Dist_map[x+1][y]→左Dist_map[x-1][y]→後Dist_map[x][y-1]
@@ -410,15 +430,22 @@ if(z==0||z==4){//(x,y),北に対して、//前Dist_map[x][y+1]→右Dist_map[x+1
 
 	//Mの向きを決めて行動決定に繋げる
 	if(MIN==Dist_map[x][y+1]){
-		pass[n]=pass[n]+2;//前向き
+		if(pass[n]>=0){//前回が直進ならpass繰りしない
+			pass[n]=pass[n]+2;//前向き
+			}else if(pass[n]<0){
+			n = n+1;//前回がslalomならpass繰り
+			pass[n]=pass[n]+2;//前向き
+			}
 		direction=0;
 	}else if(MIN==Dist_map[x+1][y]){
+		n = n+1;
 		pass[n]=-3;//右向き
 		direction=1;
 //			if((x>0)&&((row[y]&(1<<x))==(1<<x))&&((column[x-1]&(1<<y))==(1<<y))){//前壁かつ左壁あればそれぞれにケツあて(hip_adjustment=1;90前進/180°旋回/遅く90後進/30前進//90°左旋回/遅く90後進/120前進)
 //				hip_adjustment=1;
 //			}
 	}else if((x>0)&&(MIN==Dist_map[x-1][y])){
+		n = n+1;
 		pass[n]=-2;//左向き
 		direction=2;
 //			if(((row[y]&(1<<x))==(1<<x))&&((column[x]&(1<<y))==(1<<y))){//前壁かつ右壁あればそれぞれにケツあて(hip_adjustment=2;90前進/180°旋回/遅く90後進/30前進/90°右旋回/遅く90後進/120前進)
@@ -462,17 +489,26 @@ if(z==0||z==4){//(x,y),北に対して、//前Dist_map[x][y+1]→右Dist_map[x+1
 	}
 	//Mの向きを決めて行動決定に繋げる
 	if(MIN==Dist_map[x+1][y]){
-		pass[n]=pass[n]+2;//前向き
+		if(pass[n]>=0){//前回が直進ならpass繰りしない
+			pass[n]=pass[n]+2;//前向き
+			}else if(pass[n]<0){
+			n = n+1;//前回がslalomならpass繰り
+			pass[n]=pass[n]+2;//前向き
+			}
 		direction=0;
 
 	}else if((y>0)&&(MIN==Dist_map[x][y-1])){
+		n = n+1;
 		pass[n]=-3;//右向き
+
 		direction=1;
 //			if(((column[x]&(1<<y))==(1<<y))&&((row[y]&(1<<x))==(1<<x))){//前壁かつ左壁あればそれぞれにケツあて(hip_adjustment=1;90前進/180°旋回/90後進/30前進/90°左旋回/90後進/120前進)
 //				hip_adjustment=1;
 //			}
 	}else if(MIN==Dist_map[x][y+1]){
+		n = n+1;
 		pass[n]=-2;//左向き
+
 		direction=2;
 //			if((y>0)&&((column[x]&(1<<y))==(1<<y))&&((row[y-1]&(1<<x))==(1<<x))){//前壁かつ右壁あればそれぞれにケツあて(hip_adjustment=2;90前進/180°旋回/90後進/30前進/90°右旋回/90後進/120前進)
 //				hip_adjustment=2;
@@ -505,16 +541,25 @@ if(z==0||z==4){//(x,y),北に対して、//前Dist_map[x][y+1]→右Dist_map[x+1
 	}
 	//Mの向きを決めて行動決定に繋げる
 	if((y>0)&&(MIN==Dist_map[x][y-1])){
-		pass[n]=pass[n]+2;//前向き
+		if(pass[n]>=0){//前回が直進ならpass繰りしない
+			pass[n]=pass[n]+2;//前向き
+			}else if(pass[n]<0){
+			n = n+1;//前回がslalomならpass繰り
+			pass[n]=pass[n]+2;//前向き
+			}
 		direction=0;
 	}else if((x>0)&&(MIN==Dist_map[x-1][y])){
+		n = n+1;
 		pass[n]=-3;//右向き
+
 		direction=1;
 //			if((y>0)&&((row[y-1]&(1<<x))==(1<<x))&&((column[x]&(1<<y))==(1<<y))){//前壁かつ左壁あればそれぞれにケツあて(hip_adjustment=1;90前進/180°旋回/遅く90後進/30前進//90°左旋回/遅く90後進/120前進)
 //				hip_adjustment=1;
 //			}
 	}else if(MIN==Dist_map[x+1][y]){
+		n = n+1;
 		pass[n]=-2;//左向き
+
 		direction=2;
 //			if((y>0)&&(x>0)&&((row[y-1]&(1<<x))==(1<<x))&&((column[x-1]&(1<<y))==(1<<y))){//前壁かつ右壁あればそれぞれにケツあて(hip_adjustment=2;90前進/180°旋回/遅く90後進/30前進/90°右旋回/遅く90後進/120前進)
 //				hip_adjustment=2;
@@ -545,15 +590,23 @@ if(z==0||z==4){//(x,y),北に対して、//前Dist_map[x][y+1]→右Dist_map[x+1
 	}
 	//Mの向きを決めて行動決定に繋げる
 	if((x>0)&&(MIN==Dist_map[x-1][y])){
-		pass[n]=pass[n]+2;//前向き
+		if(pass[n]>=0){//前回が直進ならpass繰りしない
+			pass[n]=pass[n]+2;//前向き
+			}else if(pass[n]<0){
+			n = n+1;//前回がslalomならpass繰り
+			pass[n]=pass[n]+2;//前向き
+			}
 		direction=0;
 	}else if(MIN==Dist_map[x][y+1]){
+		n = n+1;
 		pass[n]=-3;//右向き
+
 		direction=1;
 //			if((x>0)&&(y>0)&&((column[x-1]&(1<<y))==(1<<y))&&((row[y-1]&(1<<x))==(1<<x))){//前壁かつ左壁あればそれぞれにケツあて(hip_adjustment=1;90前進/180°旋回/90後進/30前進/90°左旋回/90後進/120前進)
 //				hip_adjustment=1;
 //			}
 	}else if((y>0)&&(MIN==Dist_map[x][y-1])){
+		n = n+1;//前回のpassの次に更新
 		pass[n]=-2;//左向き
 		direction=2;
 //			if((x>0)&&(y>0)&&((column[x-1]&(1<<y))==(1<<y))&&((row[y+1]&(1<<x))==(1<<x))){//前壁かつ右壁あればそれぞれにケツあて(hip_adjustment=2;90前進/180°旋回/90後進/30前進/90°右旋回/90後進/120前進)
@@ -571,7 +624,18 @@ if(z==0||z==4){//(x,y),北に対して、//前Dist_map[x][y+1]→右Dist_map[x+1
 			  z=3;
 		  }
 	  }
-	printf("MIN=%d,direction=%d",MIN,direction);
+
+//if(pass[n]>0){
+//	int pass[n] = r + pass[n];//rは前入れたpassが正だった時にそれを一旦保管しておく
+//}else if(pass[n]<0){
+//	//n = n+1;//前のpassが次のnに
+//}else{//passが代入されていない場合、passに０入れとく
+//	pass[n] = 0;//
+//};
+
+
+
+	printf("MIN=%d,direction=%d\n\r",MIN,direction);
 Dist_map[goal_x][goal_y]=0;
 }
 
@@ -785,8 +849,17 @@ void imaginary_run_and_pass_determination(void){
 		  	 	 pl_lcd_pos(1, 0);
 		  	 	 pl_lcd_puts(strBuffer);
 		 //////////////////////////////////
-		  n += 1; //goalの区画に入る境目で終わるのでその後90進んでほしい
-	  }
+
+		  //とりあえず大回りとか無しのpass圧縮はここで、　ここが
+//		  if文設けずに→をしていたから毎回passがどんどん増えていた。スラロームの時入れる　という感じにする	 n += 1; //goalの区画に入る境目で終わるのでその後90進んでほしい
+		  	///↓の場合、圧縮されたが、passが正の時が出てこなくなった。nを足すタイミングが悪い気がする。
+//		  	 	if(pass[n]<0){
+//		  	 			  		n += 1; //goalの区画に入る境目で終わるのでその後90進んでほしい
+//		  	 			  	}
+		  	 	 //short_least_step_judgement_and_action_decision();でnは-2と-3の時に更新するように変更
+//		  	 	 n += 1; //goalの区画に入る境目で終わるのでその後90進んでほしい
+
+		   }
 
 
 

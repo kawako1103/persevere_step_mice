@@ -37,7 +37,7 @@ int Left_wall;
 int hip_adjustment=0;
 
 //ゴール座標をここに入力
-int goal_x=2;
+int goal_x=7;
 int goal_y=0;
 int count;
 int MIN;
@@ -4597,6 +4597,10 @@ void return_slalom_continual_adachi_method(void){
 
 //	  x = goal_x;//今すでにゴール((0,0)ではない)にいるから書かなくて良さそう
 //	  y = goal_y;
+
+      //帰り探索用のゴールを入れるので、一旦reserve_goal_x,yに保存しておき、帰り探索が終わったら戻す
+	  int reserve_goal_x = goal_x;
+	  int reserve_goal_y = goal_y;
 	  goal_x = 0;
 	  goal_y = 0;//ゴール座標をスタートの位置に変える　これで他の関数でも適用できる
 //	  x=0;
@@ -4692,6 +4696,11 @@ void return_slalom_continual_adachi_method(void){
 					trapezoid_accel_forward(2000,500,500,100,90);//90む台形加速の関数
 					motor_pwm_off();
 					HAL_Delay(1000);//1秒経ってから励磁解除
+
+					//帰り探索の初めで保存していたゴール座標を戻す
+					goal_x = reserve_goal_x;
+					goal_y = reserve_goal_y;
+
 					motor_excitation_off();//励磁ストップ
 					break;//無限ループから脱出
 			}
@@ -4852,6 +4861,11 @@ void return_side_added_slalom_continual_adachi_method(void){
 	//帰り探索
 	//	  x = goal_x;//今すでにゴール((0,0)ではない)にいるから書かなくて良さそう
 	//	  y = goal_y;
+
+	//帰り探索の前に元々のゴール座標を一旦保存
+	  int reserve_goal_x = goal_x;
+	  int reserve_goal_y = goal_y;
+
 		  goal_x = 0;
 		  goal_y = 0;//ゴール座標をスタートの位置に変える　これで他の関数でも適用できる
 	//	  x=0;
@@ -4863,7 +4877,8 @@ void return_side_added_slalom_continual_adachi_method(void){
 	//	  column[15]=0b1111111111111111;
 	//	  row[15]=0b1111111111111111;
 
-	      wall_information_initialize();//壁情報の初期化
+		  //帰り探索のあので壁情報初期化しない
+//	      wall_information_initialize();//壁情報の初期化
 
 	      //初期動作
 	      ///帰り探索の時は初期動作の前進はしない
@@ -4953,6 +4968,11 @@ void return_side_added_slalom_continual_adachi_method(void){
 					trapezoid_accel_forward(2000,500,500,100,90);//90む台形加速の関数
 					motor_pwm_off();
 					HAL_Delay(1000);//1秒経ってから励磁解除
+
+					//帰り探索の初めで保存していたゴール座標を戻す
+					goal_x = reserve_goal_x;
+					goal_y = reserve_goal_y;
+
 					motor_excitation_off();//励磁ストップ
 					break;//無限ループから脱出
 			}
